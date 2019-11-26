@@ -33,7 +33,7 @@ randomly selected counties, randomly selected districts, randomly selected class
     -25 kids per classroom
    
    Classroom Level:
-   1) Avg test scores (of last 5 years for teacher): ~N(72,8)
+   1) Avg test scores (of last 5 years for teacher): $ \sim N(72,8)$ 
    2) Years of teaching: ~ N(5,5)
    3) Teacher's level of education: Categorical Undergrad (1, 29 teachers), Graduate degree (2, 10 teachers), PhD (3, 1 teacher)
    
