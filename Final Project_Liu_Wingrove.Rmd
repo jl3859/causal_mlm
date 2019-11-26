@@ -1,0 +1,80 @@
+---
+title: "Final Project"
+author: "Jenny Liu & Kristen Wingrove"
+date: "11/21/2019"
+output: pdf_document
+---
+
+## Project Overview
+
+### Motivation (2 paragraphs)
+
+### Assumptions (1 page)
+- SUTVA
+
+### Descrive the design/estimators(2-3 pages, one subsection for each one and one for the comparison)
+Questions to answer:
+- When are they used?
+- How do they work?
+- What are the differences between them?
+- How will they be implemented in your simulation? 
+
+### Simulation set-up (run 1000 iterations) (2 pages)
+-NY counties, suburban classification from 2010 census --> 
+randomly selected counties, randomly selected districts, randomly selected classrooms 
+-After school program therefore assigned at individual level
+-Assuming 100% compliance with treatment assignment
+
+## Section I:
+-Base scenario to compare later violations to
+
+  Simulation Set-Up:
+    -40 classrooms
+    -25 kids per classroom
+   
+   Classroom Level:
+   1) Avg test scores (of last 5 years for teacher): ~N(72,8)
+   2) Years of teaching: ~ N(5,5)
+   3) Teacher's level of education: Categorical Undergrad (1, 29 teachers), Graduate degree (2, 10 teachers), PhD (3, 1 teacher)
+   
+   Individual Level:
+   1) Family Income ($K): ~N(65,20)
+   2) Level of Education of Parents: Categorical 0 (less than high school - 17%), 1 (high school - 26%), 2 (undergrad - 40%), 3 (grad - 10%), 4 (PhD + - 7%) - (rep, sample)
+   -----check income against this when we're done
+   3) Minority: 0-1, non minority - minority, 65% white (rep, sample)
+   4) Free or Reduced Lunch: 0-1, Based on income, anything less than $46,635 gets a 1
+   5) Distance to School (minutes): ~N(20,4) (make sure max isn't more than ~35min)
+   6) Gender: 0-1, male-female, 50/50 (rep / sample)
+   7) 9th Grade Test Score: ~ N(70,15)
+   8) 10th Grade Test Score: Y0 ~ N(70,15) + ifelse(years teaching > 10, 2, 0) + ifelse(teachers level >= 2, 2, 0) + 
+                                             ifelse(avg test scores >= 85, 1, 0)
+                             Y1 ~ N(80,15) + ifelse(years teaching > 10, 2, 0) + ifelse(teachers level >= 2, 2, 0) + 
+                                             ifelse(avg test scores >= 85, 1, 0)
+  
+   Treatment Assignment:
+   -Randomized at individual level (50%, rep, sample)
+
+A) estimate w/o group effects
+B) estimate w/ group fixed effects
+C) estimate w/ group random effects
+
+## Section II:
+-Random effects violation
+--- for Y0, Y1, add in another addition or decrease based on student level predictors
+--- ONLY CHANGE Y0 & Y1 (?): Add in ifelse(family income > 85, 2, 0) + ifelse(parents ed >= 3, 1, 0)
+
+## Section III:
+-Ignorability violation
+--- ONLY CHANGE TREATMENT ASSGN: Randomize treatment based on 9th grade test scores (9th grade score <= 65, probability of treatment is .7, otherwise probability is .5)
+ 
+## Section IV: 
+-Treatment assignment at group level
+---- ONLY CHANGE: treatment assignment (50/50 but at 40 classrooms, rep(20) sample)
+
+
+## Simulation results (2 pages)
+
+
+## Discussion (0.5 - 1 page)
+-Comparisons / description of methods +/-
+
