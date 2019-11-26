@@ -11,8 +11,9 @@ output: pdf_document
 
 ### Assumptions (1 page)
 - SUTVA
+- Full compliance with treatment assignment
 
-### Descrive the design/estimators(2-3 pages, one subsection for each one and one for the comparison)
+### Describe the design/estimators (2-3 pages, one subsection for each one and one for the comparison)
 Questions to answer:
 - When are they used?
 - How do they work?
@@ -70,6 +71,7 @@ C) estimate w/ group random effects
 ## Section IV: 
 -Treatment assignment at group level
 ---- ONLY CHANGE: treatment assignment (50/50 but at 40 classrooms, rep(20) sample)
+-Estimand is treatment effect of treated at group level
 
 
 ## Simulation results (2 pages)
