@@ -54,6 +54,10 @@ randomly selected counties, randomly selected districts, randomly selected class
   
    Treatment Assignment:
    -Randomized at individual level (50%, rep, sample)
+   
+-yo, y1, treatment are regressions based on the confounders/covariates + indicator for school that varies school (length of school level, normal distribution, map to the larger dataset by school ID)
+-Make random effects based on something in the data
+-generate treatment assignment (Homework 3) - everything that's a confounder would be too / transform to probability scale, generate treatment binomial on >.5
 
 A) estimate w/o group effects
 B) estimate w/ group fixed effects
@@ -67,6 +71,7 @@ C) estimate w/ group random effects
 ## Section III:
 -Ignorability violation
 --- ONLY CHANGE TREATMENT ASSGN: Randomize treatment based on 9th grade test scores (9th grade score <= 65, probability of treatment is .7, otherwise probability is .5)
+--- the researcher doesn't have access to say, distance to school // not conditioning on all the confounders
  
 ## Section IV: 
 -Treatment assignment at group level
