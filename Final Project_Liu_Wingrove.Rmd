@@ -9,8 +9,6 @@ output: pdf_document
 
 ### Motivation (2 paragraphs)
 
-Test.
-
 ### Assumptions (1 page)
 - SUTVA
 
