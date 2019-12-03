@@ -73,7 +73,6 @@ summary(lm(mlm_dat_class$mean_ses~mlm_dat_class$mean_minority))
 
 ```{r}
 # test score should be correlated with classroom 
-names(classroom_dat)
 classroom_dat <- classroom_dat %>% 
   mutate(dist.school.hour = dist.school/60,
          pretest = 65 + 0.4*yearstea + 0.3*teach.edu + 0.71*parent.edu + 0.15*fam.income - 2*minority - 1.5*dist.school.hour + rnorm(N, 0 ,1),
@@ -84,4 +83,7 @@ range(classroom_dat$Y0)
 range(classroom_dat$Y1)
 ```
 
+```{r}
+mean(classroom_dat$Y1)- mean(classroom_dat$Y0)
+```
 
