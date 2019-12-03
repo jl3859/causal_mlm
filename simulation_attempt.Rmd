@@ -33,7 +33,7 @@ minority <- sample(c(0:1), N, replace = T, prob = c(0.65, 0.35))
 parent.edu <- ifelse(minority == 1, sample(c(0,1,2,3,4), N, replace = T, prob = c(.40, .30, .24, .05, .01)),
                      sample(c(0,1,2,3,4), N, replace = T, prob =c(.17, .26, .40, .10, .07)))
 
-fam.income <- round(abs(rnorm(N, 62, 20)) + ifelse(parent.edu > 2, 15*parent.edu, 0) + ifelse(parent.edu == 2, 6*parent.edu, 0) + ifelse(minority == 1, rnorm(N, -7, 1), 0),3)
+fam.income <- abs(round(abs(rnorm(N, 50, 20)) + ifelse(parent.edu > 2, 15*parent.edu, 0) + ifelse(parent.edu == 2, 6*parent.edu, 0) + ifelse(minority == 1, rnorm(N, -7, 1), 0),3))
 
 freelunch <- ifelse(fam.income < 46.635, 1, 0)
 
