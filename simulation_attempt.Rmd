@@ -71,11 +71,17 @@ mlm_dat_class <- mlm_dat %>% group_by(classid) %>%
 summary(lm(mlm_dat_class$mean_ses~mlm_dat_class$mean_minority))
 ```
 
-
 ```{r}
-# test score should be corelated with classroom 
-pretest <- rnorm(N, 70, 10) + ifelse(fam.income > 100, 10, ifelse(fam.income > 80 & fam.income < 100, 5, 0))
-pretest <- ifelse(pretest > 100, 100, pretest)
+# test score should be correlated with classroom 
+names(classroom_dat)
+classroom_dat <- classroom_dat %>% 
+  mutate(dist.school.hour = dist.school/60,
+         pretest = 65 + 0.4*yearstea + 0.3*teach.edu + 0.71*parent.edu + 0.15*fam.income - 2*minority - 1.5*dist.school.hour + rnorm(N, 0 ,1),
+         Y0 = 61 + 0 + 0.4*yearstea + 0.33*teach.edu + 0.74*parent.edu + 0.18*fam.income - 2.23*minority - 1.4*dist.school.hour + rnorm(N, 0 ,1),
+         Y1 = 61 + 5 + 0.4*yearstea + 0.33*teach.edu + 0.74*parent.edu + 0.18*fam.income - 2.23*minority - 1.4*dist.school.hour + rnorm(N, 0 ,1))
+range(classroom_dat$pretest)
+range(classroom_dat$Y0)
+range(classroom_dat$Y1)
 ```
 
 
