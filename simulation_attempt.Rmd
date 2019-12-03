@@ -1,0 +1,81 @@
+---
+title: "simulation_attempt"
+author: "Jenny Liu"
+date: "12/2/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+```{r}
+set.seed(2020)
+# Classroom level covariates
+classrooms <- 40
+students <- 25 
+
+yearstea <- abs(rep(round(rnorm(classrooms, 5, 5),0), each = students))
+teach.edu <- rep(sample(c(rep(1,29), rep(2,10), 3)), each = students)
+avgtest <- rep(round(rnorm(classrooms, 72, 8),2), each = students) + 0.75*yearstea
+
+# combine into data frame
+classroom_level_dat <- data.frame(avgtest = avgtest,  yearstea = yearstea, teach.edu = teach.edu,
+                                  classid = rep(1:40, each = students))
+```
+
+```{r}
+# Individual level covariates:
+N <- classrooms*students
+minority <- sample(c(0:1), N, replace = T, prob = c(0.65, 0.35))
+
+parent.edu <- ifelse(minority == 1, sample(c(0,1,2,3,4), N, replace = T, prob = c(.40, .30, .24, .05, .01)),
+                     sample(c(0,1,2,3,4), N, replace = T, prob =c(.17, .26, .40, .10, .07)))
+
+fam.income <- round(abs(rnorm(N, 62, 20)) + ifelse(parent.edu > 2, 15*parent.edu, 0) + ifelse(parent.edu == 2, 6*parent.edu, 0) + ifelse(minority == 1, rnorm(N, -7, 1), 0),3)
+
+freelunch <- ifelse(fam.income < 46.635, 1, 0)
+
+dist.school <- round(abs(rnorm(N, 20, 4)),0)
+
+gender <- sample(c(0:1), N, replace = T, prob = c(0.50, 0.50))
+
+# combine into data frame 
+indiv_level_dat <- data.frame(parent.edu = parent.edu, fam.income = fam.income, minority = minority, 
+                              dist.school = dist.school, gender = gender, studentid  = 1:N)
+```
+
+```{r}
+# full data
+classroom_dat <- data.frame(avgtest = avgtest,  yearstea = yearstea, teach.edu = teach.edu,
+                            parent.edu = parent.edu, fam.income = fam.income, minority = minority, 
+                            freelunch = freelunch, dist.school = dist.school, gender = gender, 
+                            classid = rep(1:40, each = students), studentid  = 1:N)
+```
+
+```{r}
+class_stats <- classroom_dat %>% group_by(classid) %>% 
+  summarize(mean_income = mean(fam.income),
+            mean_minority = mean(minority)) %>% 
+  arrange(desc(mean_income))
+
+summary(lm(class_stats$mean_income~class_stats$mean_minority))
+```
+
+```{r, message = FALSE}
+mlm_dat <- readr::read_csv("../classroom.csv")
+mlm_dat_class <- mlm_dat %>% group_by(classid) %>% 
+  summarize(mean_minority = mean(minority),
+            mean_ses = round(mean(ses),2))
+summary(lm(mlm_dat_class$mean_ses~mlm_dat_class$mean_minority))
+```
+
+
+```{r}
+# test score should be corelated with classroom 
+pretest <- rnorm(N, 70, 10) + ifelse(fam.income > 100, 10, ifelse(fam.income > 80 & fam.income < 100, 5, 0))
+pretest <- ifelse(pretest > 100, 100, pretest)
+```
+
+
