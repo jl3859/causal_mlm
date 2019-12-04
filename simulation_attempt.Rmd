@@ -87,3 +87,11 @@ range(classroom_dat$Y1)
 mean(classroom_dat$Y1)- mean(classroom_dat$Y0)
 ```
 
+```{r}
+# randomly assigning treatment 
+inv.logit <- function(X) exp(X)/(1 + exp(X))
+X <- rnorm(N, 0, 1)
+prob <- inv.logit((X/max(abs(X))) * log(19))
+range(prob)
+```
+
