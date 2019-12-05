@@ -8,6 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+inv.logit <- function(X) exp(X)/(1 + exp(X))
 ```
 
 ```{r}
@@ -18,7 +19,7 @@ students <- 25
 
 yearstea <- abs(rep(round(rnorm(classrooms, 5, 5),0), each = students))
 teach.edu <- rep(sample(c(rep(1,29), rep(2,10), 3)), each = students)
-avgtest <- rep(round(rnorm(classrooms, 72, 8),2), each = students) + 0.75*yearstea
+avgtest <- rep(round(rnorm(classrooms, 72, 8),2), each = students) + 0.75*yearstea 
 
 # combine into data frame
 classroom_level_dat <- data.frame(avgtest = avgtest,  yearstea = yearstea, teach.edu = teach.edu,
@@ -53,6 +54,7 @@ classroom_dat <- data.frame(avgtest = avgtest,  yearstea = yearstea, teach.edu =
                             freelunch = freelunch, dist.school = dist.school, gender = gender, 
                             classid = rep(1:40, each = students), studentid  = 1:N)
 ```
+
 
 ```{r}
 class_stats <- classroom_dat %>% group_by(classid) %>% 

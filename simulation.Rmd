@@ -1,0 +1,77 @@
+---
+title: "simulation"
+author: "Jenny Liu"
+date: "12/5/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+inv.logit <- function(X) exp(X)/(1 + exp(X))
+```
+
+```{r}
+class_dat_function <- function(classrooms, students){
+  # classroom level covariates
+  yearstea <- abs(rep(round(rnorm(classrooms, 5, 5),0), each = students)) # trying to get a range between 0-20
+  teach.edu <- rep(sample(c(rep(1,29), rep(2,10), 3)), each = students) # 
+  avgtest <- rep(round(rnorm(classrooms, 72, 8),2), each = students) + 0.75*yearstea #correlated with teachers
+  classroom_score <- rep(rnorm(classrooms, 0, 3), each = students) 
+  
+  # student level covariates
+  N <- classrooms*students #number of total students
+  
+  minority <- sample(c(0:1), N, replace = T, prob = c(0.65, 0.35)) # 65% white students, 35% minority students
+  parent.edu <- ifelse(minority == 1, sample(c(0,1,2,3,4), N, replace = T, prob = c(.40, .30, .24, .05, .01)),
+                     sample(c(0,1,2,3,4), N, replace = T, prob =c(.17, .26, .40, .10, .07))) # conditional if the student is a minority
+  fam.income <- abs(round(abs(rnorm(N, 50, 20)) + ifelse(parent.edu > 2, 15*parent.edu, 0) + ifelse(parent.edu == 2, 6*parent.edu, 0) + 
+                            ifelse(minority == 1, rnorm(N, -7, 1), 0),3)) #correlated with parent education and minority 
+  freelunch <- ifelse(fam.income < 46.635, 1, 0) # free lunch if family income is less than ~46.6K 
+  dist.school.hour <- round(abs(rnorm(N, 20, 4)),0)/60 # indepdent 
+  gender <- sample(c(0:1), N, replace = T, prob = c(0.50, 0.50)) # independent
+  pretest <-  61 + 0.4*yearstea + 0.3*teach.edu + 0.71*parent.edu + 0.15*fam.income - 2*minority - 1.5*dist.school.hour + rnorm(N, 1, 7)
+  
+  # random probability of assignment at student-level and classroom-level 
+  X_stud <- rnorm(N, 0, 1)
+  prob_stud <- inv.logit((X_stud/max(abs(X_stud))) * log(19))
+  Z_stud <- rbinom(N, 1, prob = prob_stud)
+  
+  X_class <- rnorm(classrooms, 0, 1)
+  prob_class <- inv.logit((X_class/max(abs(X_class)))*log(19))
+  Z_class <- rbinom(N, 1, prob = prob_class)
+  Z_class <- rep(Z_class, each = students)
+  
+  # outcomes 
+  Y0 = 56 + 0 + 0.4*yearstea + 0.33*teach.edu + 0.74*parent.edu + 0.18*fam.income - 2.23*minority - 1.4*dist.school.hour + classroom_score +  rnorm(N, 0 ,1)
+  Y1 = 56 + 5 + 0.4*yearstea + 0.33*teach.edu + 0.74*parent.edu + 0.18*fam.income - 2.23*minority - 1.4*dist.school.hour + classroom_score +  rnorm(N, 0 ,1)
+  
+  # observed outcome based on treatment 
+  Y_stud <- ifelse(Z_stud == 1, Y1, Y0)
+  Y_class <- ifelse(Z_class == 1, Y1, Y0)
+  # create dataset
+  classroom_dat <- data.frame(yearstea = yearstea, teach.edu = teach.edu, avgtest = avgtest,  
+                            minority = minority, parent.edu = parent.edu, fam.income = fam.income,  
+                            freelunch = freelunch, dist.school.hour = dist.school.hour, gender = gender, pretest = pretest,
+                            classid = rep(1:classrooms, each = students), studentid  = 1:N, 
+                            Z_stud = Z_stud, Z_class = Z_class, Y_stud = Y_stud, Y_class = Y_class)
+  
+  return(classroom_dat[1:1000,]) #for some reason we get 25000 rows? not sure what is going on here 
+}
+```
+
+```{r}
+set.seed(2020)
+classroom_dat <- class_dat_function(40, 25)
+```
+
+```{r}
+par(mfrow = c(2,3))
+plot(classroom_dat$yearstea, classroom_dat$avgtest, xlab = "Years teaching", ylab="Average Test Scores", main = "")
+hist(classroom_dat$fam.income, main = "Family Income")
+hist(classroom_dat$pretest, main = "Pretest Scores")
+plot(classroom_dat$parent.edu, classroom_dat$fam.income, xlab= "Parent Education", ylab = "Family Income")
+plot(classroom_dat$pretest, classroom_dat$Y_stud, xlab = "9th grades scores", ylab = "10th grade scores", main = "Randomized at student-level")
+plot(classroom_dat$pretest, classroom_dat$Y_class, xlab = "9th grades scores", ylab = "10th grade scores", main = "Randomized at classroom-level") 
+```
+
