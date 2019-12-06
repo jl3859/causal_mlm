@@ -12,6 +12,7 @@ library(lfe)
 library(lme4)
 library(lmerTest)
 library(plm)
+library(gridExtra)
 inv.logit <- function(X) exp(X)/(1 + exp(X))
 ```
 
@@ -112,7 +113,8 @@ summary(random.base)
 Section II: Violate Random Effects Assumption
 
 ```{r}
-#Violate Random Effects Assumption
+# Violate Random Effects Assumption
+# Correlates the classroom_score adjustment with mean classroom pretest scores
 
 re_dat_function <- function(classrooms, students){
   # classroom level covariates
@@ -276,7 +278,7 @@ fixed.ig <- lfe::felm(model_ig$Y_stud ~ model_ig$Z_stud + model_ig$minority + mo
 summary(fixed.ig)
 
 #Ignorability Violation - Fixed Effects Model Bias
-(fe.base.bias <- fixed.base$coefficients[1] - SATE_ig)
+(fe.ig.bias <- fixed.base$coefficients[1] - SATE_ig)
 
 #Ignorability Violation w/ Random Effects
 random.ig <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + gender + pretest + (1 | classid), data = model_ig)
@@ -320,3 +322,15 @@ summary(random.gl)
 (re.gl.bias <- summary(random.gl)$coefficients[2,1] - SATE)
 
 ```
+
+Comparison Tables
+
+```{r, fig.height = 2, fig.width = 7}
+
+bias_compare <- data.frame("Bias Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"), "Base Case" = round(c(lr.base.bias, fe.base.bias, re.base.bias),4), "RE Violation" = round(c(lr.re.bias, fe.re.bias, re.re.bias),4), "Ig. Violation" = round(c(lr.ig.bias, fe.ig.bias, re.ig.bias),4), "Group Treatment" = c(round(lr.gl.bias,4), "N/A", round(re.gl.bias,4)))
+
+grid.arrange(tableGrob(bias_compare, theme=ttheme_default()), nrow = 1)
+
+
+```
+
