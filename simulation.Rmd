@@ -83,9 +83,16 @@ plot(classroom_dat$pretest, classroom_dat$Y_class, xlab = "9th grades scores", y
 ```
 
 ```{r}
+plot(x=factor(classroom_dat$classid), y=classroom_dat$Y_stud, xlab= "Classid", ylab = "10th grade test scores", ylim = c(50, 100))
+plot(x=factor(classroom_dat$classid), y=classroom_dat$Y_class, xlab= "Classid", ylab = "10th grade test scores", 
+     ylim = c(50,100))
+```
 
+
+```{r}
 SATE <- mean(classroom_dat$Y1) - mean(classroom_dat$Y0)
-model_stu <- classroom_dat %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, fam.income, freelunch, dist.school.hour, gender, pretest, classid)
+model_stu <- classroom_dat %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, 
+                                      fam.income, freelunch, dist.school.hour, gender, pretest, classid)
 
 #Base Linear Regression
 lr.base <- lm(Y_stud ~., data = model_stu[,-13])
@@ -95,14 +102,22 @@ summary(lr.base)
 (lr.base.bias <- lr.base$coefficients[2] - SATE)
 
 #Base w/ Fixed Effects
-fixed.base <- lfe::felm(model_stu$Y_stud ~ model_stu$Z_stud + model_stu$minority + model_stu$parent.edu + model_stu$fam.income + model_stu$freelunch + model_stu$dist.school.hour + model_stu$gender + model_stu$pretest | model_stu$classid) 
+fixed.base <- lfe::felm(model_stu$Y_stud ~ model_stu$Z_stud + model_stu$minority + model_stu$parent.edu +
+                          model_stu$fam.income + model_stu$freelunch + model_stu$dist.school.hour + model_stu$gender +
+                          model_stu$pretest | model_stu$classid) 
 summary(fixed.base)
+
+fixed.base.factor <- lm(model_stu$Y_stud ~ model_stu$Z_stud + model_stu$minority + model_stu$parent.edu +
+                          model_stu$fam.income + model_stu$freelunch + model_stu$dist.school.hour + model_stu$gender +
+                          model_stu$pretest + factor(model_stu$classid))
+summary(fixed.base.factor)$coefficients[2]
 
 #Base - Fixed Effects Model Bias
 (fe.base.bias <- fixed.base$coefficients[1] - SATE)
 
 #Base w/ Random Effects
-random.base <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour + gender + pretest + (1 | classid), data = model_stu)
+random.base <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                                gender + pretest + (1 | classid), data = model_stu)
 summary(random.base)
 
 #Base - Random Effects Model Bias
@@ -170,12 +185,12 @@ re_dat_function <- function(classrooms, students){
 
 
 ```{r}
-
 re_dat <- re_dat_function(40, 25)
 
 SATE_re <- mean(re_dat$Y1) - mean(re_dat$Y0)
 
-model_stu_re <- re_dat %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, fam.income, freelunch, dist.school.hour, gender, pretest, classid)
+model_stu_re <- re_dat %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, 
+                                  fam.income, freelunch, dist.school.hour, gender, pretest, classid)
 
 #Random Effects Violation Linear Regression
 lr.re <- lm(Y_stud ~., data = model_stu_re[,-13])
@@ -185,14 +200,22 @@ summary(lr.re)
 (lr.re.bias <- lr.re$coefficients[2] - SATE_re)
 
 #Random Effects Violation w/ Fixed Effects
-fixed.re <- lfe::felm(model_stu_re$Y_stud ~ model_stu_re$Z_stud + model_stu_re$minority + model_stu_re$parent.edu + model_stu_re$fam.income + model_stu_re$freelunch + model_stu_re$dist.school.hour + model_stu_re$gender + model_stu_re$pretest | model_stu_re$classid) 
-summary(fixed.re)
+fixed.re <- lfe::felm(model_stu_re$Y_stud ~ model_stu_re$Z_stud + model_stu_re$minority + model_stu_re$parent.edu +
+                        model_stu_re$fam.income + model_stu_re$freelunch + model_stu_re$dist.school.hour +
+                        model_stu_re$gender + model_stu_re$pretest | model_stu_re$classid) 
+summary(fixed.re)$coefficients[1]
+
+fixed.re.factor <- lm(model_stu_re$Y_stud ~ model_stu_re$Z_stud + model_stu_re$minority + model_stu_re$parent.edu +
+                        model_stu_re$fam.income + model_stu_re$freelunch + model_stu_re$dist.school.hour +
+                        model_stu_re$gender + model_stu_re$pretest + factor(model_stu_re$classid))
+summary(fixed.re.factor)$coefficients[2]
 
 #Random Effects Violation - Fixed Effects Model Bias
 (fe.re.bias <- fixed.re$coefficients[1] - SATE_re)
 
 #Random Effects Violation w/ Random Effects
-random.re <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour + gender + pretest + (1 | classid), data = model_stu_re)
+random.re <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                              gender + pretest + (1 | classid), data = model_stu_re)
 summary(random.re)
 
 #Random Effects Violation - Random Effects Model Bias
@@ -264,7 +287,8 @@ ig_dat <- ig_dat_function(40, 25)
 
 SATE_ig <- mean(ig_dat$Y1) - mean(ig_dat$Y0)
 
-model_ig <- ig_dat %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, fam.income, freelunch, gender, pretest, classid)
+model_ig <- ig_dat %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, fam.income, 
+                              freelunch, gender, pretest, classid)
 
 #Ignorability Violation - Linear Regression
 lr.ig <- lm(Y_stud ~., data = model_ig[,-12])
@@ -274,8 +298,13 @@ summary(lr.ig)
 (lr.ig.bias <- lr.ig$coefficients[2] - SATE_ig)
 
 #Ignorability Violation w/ Fixed Effects
-fixed.ig <- lfe::felm(model_ig$Y_stud ~ model_ig$Z_stud + model_ig$minority + model_ig$parent.edu + model_ig$fam.income + model_ig$freelunch + model_ig$gender + model_ig$pretest | model_ig$classid)
-summary(fixed.ig)
+fixed.ig <- lfe::felm(model_ig$Y_stud ~ model_ig$Z_stud + model_ig$minority + model_ig$parent.edu + 
+                        model_ig$fam.income + model_ig$freelunch + model_ig$gender + model_ig$pretest |model_ig$classid)
+summary(fixed.ig)$coefficients[1]
+
+fixed.ig.factor <- lm(model_ig$Y_stud ~ model_ig$Z_stud + model_ig$minority + model_ig$parent.edu + 
+                        model_ig$fam.income + model_ig$freelunch + model_ig$gender + model_ig$pretest + factor(model_ig$classid))
+summary(fixed.ig.factor)$coefficients[2]
 
 #Ignorability Violation - Fixed Effects Model Bias
 (fe.ig.bias <- fixed.base$coefficients[1] - SATE_ig)
@@ -286,7 +315,6 @@ summary(random.ig)
 
 #Base - Random Effects Model Bias
 (re.ig.bias <- summary(random.ig)$coefficients[2,1] - SATE_ig)
-
 ```
 
 Section IV: Treatment Assignment at the Group Level
@@ -294,10 +322,9 @@ Section IV: Treatment Assignment at the Group Level
 *Make sure to interpret bias & treatment effect coefficients at the GROUP LEVEL - estimand has changed; treatment effect of the treated group*
 
 ```{r}
-
 #Treatment Effect of the Treated @ Group Level
-
-model_class <- classroom_dat %>% select(Y_class, Z_class, yearstea, teach.edu, avgtest, minority, parent.edu, fam.income, freelunch, dist.school.hour, gender, pretest, classid)
+model_class <- classroom_dat %>% select(Y_class, Z_class, yearstea, teach.edu, avgtest, minority, parent.edu,
+                                        fam.income, freelunch, dist.school.hour, gender, pretest, classid)
 
 #Group Level Treatment Effect Linear Regression
 lr.gl <- lm(Y_class ~., data = model_class[,-13])
@@ -307,19 +334,37 @@ summary(lr.gl)
 (lr.gl.bias <- lr.gl$coefficients[2] - SATE)
 
 #Group Level Treatment Effect w/ Fixed Effects
-fixed.gl <- lfe::felm(model_class$Y_class ~ model_class$Z_class + model_class$minority + model_class$parent.edu + model_class$fam.income + model_class$freelunch + model_class$dist.school.hour + model_class$gender + model_class$pretest | model_class$classid)
+fixed.gl <- lfe::felm(model_class$Y_class ~ model_class$Z_class + model_class$minority + model_class$parent.edu +
+                        model_class$fam.income + model_class$freelunch + model_class$dist.school.hour +
+                        model_class$gender + model_class$pretest | model_class$classid)
 summary(fixed.gl)
+
+### 
+fixed.gl.factor <- lm(model_class$Y_class ~ model_class$Z_class + model_class$minority + model_class$parent.edu +
+                        model_class$fam.income + model_class$freelunch + model_class$dist.school.hour +
+                        model_class$gender + model_class$pretest + factor(model_class$classid))
+summary(fixed.gl.factor)$coefficients[2]
+
 
 #Group Level Treatment Effect - Fixed Effects Model Bias
 ## Z_class does not return coeffient - I think this makes sense since we're running the regression at the class level?
 # (fe.gl.bias <- fixed.gl$coefficients[1] - SATE)
 
-#Group Level Treatment Effect w/ Random Effects
-random.gl <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour + gender + pretest + (1 | classid), data = model_class)
+#Group Level Treatment Effect w/ ****Random Effects***
+random.gl <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                              gender + pretest + (1 | classid), data = model_class)
 summary(random.gl)
 
 #Group Level Treatment Effect - Random Effects Model Bias
 (re.gl.bias <- summary(random.gl)$coefficients[2,1] - SATE)
+
+#Group Level Treatment Effect w/ Random Effects correlate with treatment
+random.gl.corre <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                              gender + pretest + (1 + Z_class| classid), data = model_class)
+summary(random.gl.corre)$coefficients[2,1]
+
+#Group Level Treatment Effect - Random Effects Model Bias
+(summary(random.gl.corre)$coefficients[2,1] - SATE)
 
 ```
 
@@ -327,7 +372,11 @@ Comparison Tables
 
 ```{r, fig.height = 2, fig.width = 7}
 
-bias_compare <- data.frame("Bias Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"), "Base Case" = round(c(lr.base.bias, fe.base.bias, re.base.bias),4), "RE Violation" = round(c(lr.re.bias, fe.re.bias, re.re.bias),4), "Ig. Violation" = round(c(lr.ig.bias, fe.ig.bias, re.ig.bias),4), "Group Treatment" = c(round(lr.gl.bias,4), "N/A", round(re.gl.bias,4)))
+bias_compare <- data.frame("Bias Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"), 
+                           "Base Case" = round(c(lr.base.bias, fe.base.bias, re.base.bias),4), 
+                           "RE Violation" = round(c(lr.re.bias, fe.re.bias, re.re.bias),4), 
+                           "Ig. Violation" = round(c(lr.ig.bias, fe.ig.bias, re.ig.bias),4), 
+                           "Group Treatment" = c(round(lr.gl.bias,4), "N/A", round(re.gl.bias,4)))
 
 grid.arrange(tableGrob(bias_compare, theme=ttheme_default()), nrow = 1)
 
