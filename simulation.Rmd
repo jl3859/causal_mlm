@@ -45,7 +45,8 @@ class_dat_function <- function(classrooms, students){
   prob_stud <- inv.logit((X_stud/max(abs(X_stud))) * log(19))
   Z_stud <- rbinom(N, 1, prob = prob_stud)
   
-  X_class <- rnorm(classrooms, 0, 1)
+  
+  X_class <- rnorm(classrooms, 0, 1) + 0.1*as.numeric(names(table(avgtest)))
   prob_class <- inv.logit((X_class/max(abs(X_class)))*log(19))
   Z_class <- rbinom(classrooms, 1, prob = prob_class)
   Z_class <- rep(Z_class, each = students)
@@ -487,7 +488,8 @@ summary(fixed.gl)
 ### 
 fixed.gl.factor <- lm(model_class$Y_class ~ model_class$Z_class + model_class$minority + model_class$parent.edu +
                         model_class$fam.income + model_class$freelunch + model_class$dist.school.hour +
-                        model_class$gender + model_class$pretest + factor(model_class$classid))
+                        model_class$gender + model_class$pretest + factor(model_class$classid) +
+                        model_class$yearstea + model_class$avgtest + factor(model_class$teach.edu))
 summary(fixed.gl.factor)$coefficients[2]
 
 
@@ -497,7 +499,7 @@ summary(fixed.gl.factor)$coefficients[2]
 
 #Group Level Treatment Effect w/ ****Random Effects***
 random.gl <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
-                              gender + pretest + (1 | classid), data = model_class)
+                              gender + pretest + yearstea + avgtest + factor(teach.edu) + (1 | classid), data = model_class)
 summary(random.gl)
 
 #Group Level Treatment Effect - Random Effects Model Bias
@@ -505,7 +507,7 @@ summary(random.gl)
 
 #Group Level Treatment Effect w/ Random Effects correlate with treatment
 random.gl.corre <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
-                              gender + pretest + (1 + Z_class| classid), data = model_class)
+                              gender + pretest + yearstea + avgtest + factor(teach.edu) + (1 + Z_class| classid), data = model_class)
 summary(random.gl.corre)$coefficients[2,1]
 
 #Group Level Treatment Effect - Random Effects Model Bias
@@ -518,13 +520,11 @@ Comparison Tables
 ```{r, fig.height = 2, fig.width = 7}
 
 bias_compare <- data.frame("Bias Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"), 
-                           "Base Case" = round(c(lr.base.bias, fe.base.bias, re.base.bias),4), 
-                           "RE Violation" = round(c(lr.re.bias, fe.re.bias, re.re.bias),4), 
-                           "Ig. Violation" = round(c(lr.ig.bias, fe.ig.bias, re.ig.bias),4), 
-                           "Group Treatment" = c(round(lr.gl.bias,4), "N/A", round(re.gl.bias,4)))
+                           "Base Case" = round(c(lr.base.bias, fe.base.bias, re.base.bias),2), 
+                           "RE Violation" = round(c(lr.re.bias, fe.re.bias, re.re.bias),2), 
+                           "Ig. Violation" = round(c(lr.ig.bias, fe.ig.bias, re.ig.bias),2), 
+                           "Group Treatment" = c(round(lr.gl.bias,2), "N/A", round(re.gl.bias,2)))
 
 grid.arrange(tableGrob(bias_compare, theme=ttheme_default()), nrow = 1)
-
-
 ```
 
