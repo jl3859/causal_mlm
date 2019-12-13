@@ -143,8 +143,8 @@ ig_dat_function <- function(classrooms, students){
   # probability of assignment is based on pretest scores 
   low_count <- sum(pretest <= 65)
   high_count <- length(pretest) - low_count
-  low_score <- sample(c(rep(0,round(.3*low_count,0)),rep(1,round(.7*low_count,0))), low_count) # higher probability (70%) of treatment if test score is <= 65 
-  high_score <- sample(c(rep(0,round(.5*high_count,0)), rep(1, round(.5*high_count,0))), high_count) #equal probability of treatment if test score is > 65 
+  low_score <- sample(c(rep(0,round(.3*low_count,0)),rep(1,1 - round(.3*low_count,0))), low_count) # higher probability (70%) of treatment if test score is <= 65 
+  high_score <- sample(c(rep(0,round(.5*high_count,0)), rep(1, 1-round(.5*high_count,0))), high_count) #equal probability of treatment if test score is > 65 
   Z_stud <- rep(NA,N)
   Z_stud[pretest > 65] <- high_score
   Z_stud[pretest <= 65] <- low_score
