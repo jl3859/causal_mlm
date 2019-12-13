@@ -443,6 +443,8 @@ for(i in 1:iter){
   base_data$Z_stud[base_data$pretest > 65] <- high_score
   base_data$Z_stud[base_data$pretest <= 65] <- low_score
   
+  base_data$Y_stud <- ifelse(base_data$Z_stud==1, base_data$Y1, base_data$Y0)
+  
   base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, fam.income, 
                                           freelunch, gender, pretest, classid)
   
@@ -605,6 +607,8 @@ count <- 1
 
 for(i in 1:iter){
   
+  base_data <- classroom_dat
+  
   # Randomization Distribution - randomize treatment
   avg_tea <- data.frame(classid = base_data$classid, avgtest = base_data$avgtest)
   avg_tea <- unique(avg_tea)
@@ -625,8 +629,8 @@ for(i in 1:iter){
   gl_rd_sim[j,1] <- "lr"
   lr_gl_sim <- lm(Y_class ~., data = base_data_model[,-13])
   gl_rd_sim[j,2] <- lr_gl_sim$coefficients[2]
-  gl_rd_sim[j,3] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,1]
-  gl_rd_sim[j,4] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,2]
+  gl_rd_sim[j,3] <- confint(lr_gl_sim, 'Z_class', level = .95)[1,1]
+  gl_rd_sim[j,4] <- confint(lr_gl_sim, 'Z_class', level = .95)[1,2]
   
   # Fixed Effect Sim
   j <- count+1
@@ -636,8 +640,8 @@ for(i in 1:iter){
                               base_data_model$dist.school.hour + base_data_model$gender + 
                               base_data_model$pretest | base_data_model$classid)
   gl_rd_sim[j,2] <- fixed_gl_sim$coefficients[1]
-  gl_rd_sim[j,3] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,1]
-  gl_rd_sim[j,4] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,2]
+  gl_rd_sim[j,3] <- confint(fixed_gl_sim, 'base_data_model$Z_class', level = .95)[1,1]
+  gl_rd_sim[j,4] <- confint(fixed_gl_sim, 'base_data_model$Z_class', level = .95)[1,2]
   
   # Random Effect Sim
   j <- count+2
@@ -645,8 +649,8 @@ for(i in 1:iter){
   random_gl_sim <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
                                     gender + pretest + yearstea + avgtest + teach.edu + (1 | classid), data = base_data_model)
   gl_rd_sim[j,2] <- summary(random_gl_sim)$coefficients[2,1]
-  gl_rd_sim[j,3] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,1]
-  gl_rd_sim[j,4] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,2]  
+  gl_rd_sim[j,3] <- confint(random_gl_sim, 'Z_class', level = .95)[1,1]
+  gl_rd_sim[j,4] <- confint(random_gl_sim, 'Z_class', level = .95)[1,2]  
   
   count <- j+1
   print(i)
@@ -694,8 +698,8 @@ for(i in 1:iter){
   gl_sd_sim[j,1] <- "lr"
   lr_gl_sim <- lm(Y_class ~., data = base_data_model[,-13])
   gl_sd_sim[j,2] <- lr_base_sim$coefficients[2]
-  gl_sd_sim[j,3] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,1]
-  gl_sd_sim[j,4] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,2]
+  gl_sd_sim[j,3] <- confint(lr_gl_sim, 'Z_class', level = .95)[1,1]
+  gl_sd_sim[j,4] <- confint(lr_gl_sim, 'Z_class', level = .95)[1,2]
   gl_sd_sim[j,5] <- SATE_sim
   
   #Fixed Effect Sim
@@ -706,8 +710,8 @@ for(i in 1:iter){
                               base_data_model$dist.school.hour + base_data_model$gender + 
                               base_data_model$pretest | base_data_model$classid)
   gl_sd_sim[j,2] <- fixed_gl_sim$coefficients[1]
-  gl_sd_sim[j,3] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,1]
-  gl_sd_sim[j,4] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,2]
+  gl_sd_sim[j,3] <- confint(fixed_gl_sim, 'base_data_model$Z_class', level = .95)[1,1]
+  gl_sd_sim[j,4] <- confint(fixed_gl_sim, 'base_data_model$Z_class', level = .95)[1,2]
   gl_sd_sim[j,5] <- SATE_sim
   
   #Random Effect Sim
@@ -716,8 +720,8 @@ for(i in 1:iter){
   random_gl_sim <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
                                     gender + pretest + yearstea + avgtest + teach.edu + (1 | classid), data = base_data_model) 
   gl_sd_sim[j,2] <- summary(random_gl_sim)$coefficients[2,1]
-  gl_sd_sim[j,3] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,1]
-  gl_sd_sim[j,4] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,2]  
+  gl_sd_sim[j,3] <- confint(random_gl_sim, 'Z_class', level = .95)[1,1]
+  gl_sd_sim[j,4] <- confint(random_gl_sim, 'Z_class', level = .95)[1,2]  
   gl_sd_sim[j,5] <- SATE_sim
   
   count <- j+1
