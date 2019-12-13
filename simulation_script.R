@@ -432,12 +432,16 @@ for(i in 1:iter){
   base_data <- ig_dat
   N <- nrow(base_data)
   
-  X_stud <- rnorm(N, 0, 1)
-  prob_stud <- inv.logit((X_stud/max(abs(X_stud))) * log(19))
-  Z_stud <- rbinom(N, 1, prob = prob_stud)
-  
-  base_data$Z_stud <- Z_stud
-  base_data$Y_stud <- ifelse(Z_stud == 1, base_data$Y1, base_data$Y0)
+  # probability of assignment is based on pretest scores 
+  low_count <- sum(base_data$pretest <= 65)
+  high_count <- length(base_data$pretest) - low_count
+  low_score <- sample(c(rep(0,round(.3*low_count,0)),rep(1,low_count - round(.3*low_count,0))), low_count) 
+  # higher probability (70%) of treatment if test score is <= 65 
+  high_score <- sample(c(rep(0,round(.5*high_count,0)), rep(1, high_count -round(.5*high_count,0))), high_count) 
+  # equal probability of treatment if test score is > 65 
+  base_data$Z_stud <- rep(NA,N)
+  base_data$Z_stud[base_data$pretest > 65] <- high_score
+  base_data$Z_stud[base_data$pretest <= 65] <- low_score
   
   base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, fam.income, 
                                           freelunch, gender, pretest, classid)
@@ -602,23 +606,24 @@ count <- 1
 for(i in 1:iter){
   
   # Randomization Distribution - randomize treatment
-  base_data <- classroom_dat
-  N <- nrow(base_data)
+  avg_tea <- data.frame(classid = base_data$classid, avgtest = base_data$avgtest)
+  avg_tea <- unique(avg_tea)
+  X_class <- rnorm(unique(base_data$classid), 0, 1) - (.03*avg_tea$avgtest) 
+  # correlate classroom treatment with classroom level predictor
+  prob_class <- inv.logit((X_class/max(abs(X_class)))*log(19))
+  Z_class <- rbinom(unique(base_data$classid), 1, prob = prob_class)
+  Z_class <- rep(Z_class, each = unique(base_data$studentid)/unique(base_data$classid))
   
-  X_stud <- rnorm(N, 0, 1)
-  prob_stud <- inv.logit((X_stud/max(abs(X_stud))) * log(19))
-  Z_stud <- rbinom(N, 1, prob = prob_stud)
+  base_data$Z_class <- Z_class
+  base_data$Y_class <- ifelse(Z_class == 1, base_data$Y1, base_data$Y0)
   
-  base_data$Z_stud <- Z_stud
-  base_data$Y_stud <- ifelse(Z_stud == 1, base_data$Y1, base_data$Y0)
-  
-  base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, 
+  base_data_model <- base_data %>% select(Y_class, Z_class, yearstea, teach.edu, avgtest, minority, parent.edu,
                                           fam.income, freelunch, dist.school.hour, gender, pretest, classid)
   
   # Linear Regression Sim
   j <- count
   gl_rd_sim[j,1] <- "lr"
-  lr_gl_sim <- lm(Y_stud ~., data = base_data_model[,-13])
+  lr_gl_sim <- lm(Y_class ~., data = base_data_model[,-13])
   gl_rd_sim[j,2] <- lr_gl_sim$coefficients[2]
   gl_rd_sim[j,3] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,1]
   gl_rd_sim[j,4] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,2]
@@ -626,10 +631,10 @@ for(i in 1:iter){
   # Fixed Effect Sim
   j <- count+1
   gl_rd_sim[j,1] <- "fixed"
-  fixed_gl_sim <- lfe::felm(base_data_model$Y_stud ~ base_data_model$Z_stud + base_data_model$minority +
-                              base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch +
-                              base_data_model$dist.school.hour + base_data_model$gender + base_data_model$pretest |
-                              base_data_model$classid) 
+  fixed_gl_sim <- lfe::felm(base_data_model$Y_class ~ base_data_model$Z_class + base_data_model$minority + 
+                              base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch + 
+                              base_data_model$dist.school.hour + base_data_model$gender + 
+                              base_data_model$pretest | base_data_model$classid)
   gl_rd_sim[j,2] <- fixed_gl_sim$coefficients[1]
   gl_rd_sim[j,3] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,1]
   gl_rd_sim[j,4] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,2]
@@ -637,8 +642,8 @@ for(i in 1:iter){
   # Random Effect Sim
   j <- count+2
   gl_rd_sim[j,1] <- "random"
-  random_gl_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour +
-                                    gender + pretest + (1 | classid), data = base_data_model) 
+  random_gl_sim <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                                    gender + pretest + yearstea + avgtest + teach.edu + (1 | classid), data = base_data_model)
   gl_rd_sim[j,2] <- summary(random_gl_sim)$coefficients[2,1]
   gl_rd_sim[j,3] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,1]
   gl_rd_sim[j,4] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,2]  
@@ -651,7 +656,7 @@ for(i in 1:iter){
 gl_rd_sim$SATE <- rep(SATE, nrow(gl_rd_sim))
 gl_rd_sim$bias <- gl_rd_sim$coef - gl_rd_sim$SATE
 
-# histograms for violation of ignorability assumption
+# histograms for group level treatment effect
 ## linear regression
 hist(gl_rd_sim$coef[gl_rd_sim$type == "lr"], main = "Randomization Distribution - IV (Linear Regression)", 
      xlab = "Treatment Effect", xlim = c(min(gl_rd_sim$coef)-.5, max = max(gl_rd_sim$coef)+.5))
@@ -681,13 +686,13 @@ for(i in 1:iter){
   #Sampling Distribution - resample data
   base_data <- class_dat_function(40, 25)
   SATE_sim <- mean(base_data$Y1) - mean(base_data$Y0)
-  base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, 
+  base_data_model <- base_data %>% select(Y_class, Z_class, yearstea, teach.edu, avgtest, minority, parent.edu,
                                           fam.income, freelunch, dist.school.hour, gender, pretest, classid)
   
   #Linear Regression Sim
   j <- count
   gl_sd_sim[j,1] <- "lr"
-  lr_gl_sim <- lm(Y_stud ~., data = base_data_model[,-13])
+  lr_gl_sim <- lm(Y_class ~., data = base_data_model[,-13])
   gl_sd_sim[j,2] <- lr_base_sim$coefficients[2]
   gl_sd_sim[j,3] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,1]
   gl_sd_sim[j,4] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,2]
@@ -696,10 +701,10 @@ for(i in 1:iter){
   #Fixed Effect Sim
   j <- count+1
   gl_sd_sim[j,1] <- "fixed"
-  fixed_gl_sim <- lfe::felm(base_data_model$Y_stud ~ base_data_model$Z_stud + base_data_model$minority +
-                              base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch +
-                              base_data_model$dist.school.hour + base_data_model$gender + base_data_model$pretest |
-                              base_data_model$classid) 
+  fixed_gl_sim <- lfe::felm(base_data_model$Y_class ~ base_data_model$Z_class + base_data_model$minority + 
+                              base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch + 
+                              base_data_model$dist.school.hour + base_data_model$gender + 
+                              base_data_model$pretest | base_data_model$classid)
   gl_sd_sim[j,2] <- fixed_gl_sim$coefficients[1]
   gl_sd_sim[j,3] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,1]
   gl_sd_sim[j,4] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,2]
@@ -708,7 +713,7 @@ for(i in 1:iter){
   #Random Effect Sim
   j <- count+2
   gl_sd_sim[j,1] <- "random"
-  random_gl_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+  random_gl_sim <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
                                     gender + pretest + yearstea + avgtest + teach.edu + (1 | classid), data = base_data_model) 
   gl_sd_sim[j,2] <- summary(random_gl_sim)$coefficients[2,1]
   gl_sd_sim[j,3] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,1]
@@ -721,7 +726,7 @@ for(i in 1:iter){
 
 gl_sd_sim$bias <- gl_sd_sim$coef - gl_sd_sim$SATE
 
-# histograms for violation of ignorability assumption
+# histograms for group level treatment effect
 ## linear regression
 hist(gl_sd_sim$coef[gl_sd_sim$type == "lr"], main = "Randomization Distribution - IV (Linear Regression)", 
      xlab = "Treatment Effect", xlim = c(min(gl_sd_sim$coef)-.5, max = max(gl_sd_sim$coef)+.5))
