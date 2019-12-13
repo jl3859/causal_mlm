@@ -2,6 +2,7 @@ library(tidyverse)
 library(lfe)
 library(lme4)
 library(lmerTest)
+library(gridExtra)
 
 # Source data generation process functions
 source("dgp_script.R") 
@@ -730,5 +731,15 @@ abline(v = mean(gl_sd_sim$SATE), col = "red")
 
 
 
+
+# BIAS COMPARISON ###################################################################################################
+
+bias_compare <- data.frame("Bias Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"), 
+                           "Base Case" = round(c(lr.base.bias, fe.base.bias, re.base.bias),4), 
+                           "RE Violation" = round(c(lr.re.bias, fe.re.bias, re.re.bias),4), 
+                           "Ig. Violation" = round(c(lr.ig.bias, fe.ig.bias, re.ig.bias),4), 
+                           "Group Treatment" = c(round(lr.gl.bias,4), "N/A", round(re.gl.bias,4)))
+
+grid.arrange(tableGrob(bias_compare, theme=ttheme_default()), nrow = 1)
 
 
