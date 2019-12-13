@@ -378,8 +378,357 @@ ggplot() +
   geom_histogram(data = vre_sd_sim[vre_sd_sim$type == "fixed",], aes(x = coef), color = "green", fill = "white", alpha = .25) +
   geom_histogram(data = vre_sd_sim[vre_sd_sim$type == "random",], aes(x = coef), color = "red", fill = "white", alpha = .25) +
   labs(x = "Treatment Effect", y = "Frequency") +
-  geom_vline(xintercept=SATE, color = "black", linetype = "dashed", size = 1.25)
+  geom_vline(xintercept=mean(vre_sd_sim$SATE), color = "black", linetype = "dashed", size = 1.25)
 
-# VIOLATE IGNORABILITY SIMULATION #####################################################################################
+# VIOLATE IGNORABILITY SIMULATION ####################################################################################
+
+## call ignorability dgp and store data frame
+ig_dat <- ig_dat_function(40, 25)
+
+## store SATE and generate data frame for models
+SATE_ig <- mean(ig_dat$Y1) - mean(ig_dat$Y0)
+model_ig <- ig_dat %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, fam.income, 
+                              freelunch, gender, pretest, classid)
+
+#### Initial Run ######################################################################################################
+
+# Ignorability Violation - Linear Regression
+lr.ig <- lm(Y_stud ~., data = model_ig[,-12])
+
+# Ignorability Violation - Linear Regression Model Bias
+(lr.ig.bias <- lr.ig$coefficients[2] - SATE_ig)
+
+# Ignorability Violation w/ Fixed Effects
+fixed.ig <- lfe::felm(model_ig$Y_stud ~ model_ig$Z_stud + model_ig$minority + model_ig$parent.edu + 
+                        model_ig$fam.income + model_ig$freelunch + model_ig$gender + model_ig$pretest |model_ig$classid)
+
+# Ignorability Violation - Fixed Effects Model Bias
+(fe.ig.bias <- fixed.base$coefficients[1] - SATE_ig)
+
+# Ignorability Violation w/ Random Effects
+random.ig <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + gender + pretest + 
+                              yearstea + avgtest + teach.edu + (1 | classid), data = model_ig)
+summary(random.ig)
+
+# Ignorability Violation - Random Effects Model Bias
+(re.ig.bias <- summary(random.ig)$coefficients[2,1] - SATE_ig)
+
+#### Ignorability Violation Randomization Distribution #################################################################
+
+# initialize results data frame
+ig_rd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3))
+
+# initialize count number for results data frame rows
+count <- 1
+
+for(i in 1:iter){
+  
+  # Randomization Distribution - randomize treatment
+  base_data <- ig_dat
+  N <- nrow(base_data)
+  
+  X_stud <- rnorm(N, 0, 1)
+  prob_stud <- inv.logit((X_stud/max(abs(X_stud))) * log(19))
+  Z_stud <- rbinom(N, 1, prob = prob_stud)
+  
+  base_data$Z_stud <- Z_stud
+  base_data$Y_stud <- ifelse(Z_stud == 1, base_data$Y1, base_data$Y0)
+  
+  base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, 
+                                          fam.income, freelunch, dist.school.hour, gender, pretest, classid)
+  
+  # Linear Regression Sim
+  j <- count
+  ig_rd_sim[j,1] <- "lr"
+  lr_ig_sim <- lm(Y_stud ~., data = base_data_model[,-13])
+  ig_rd_sim[j,2] <- lr_ig_sim$coefficients[2]
+  ig_rd_sim[j,3] <- confint(lr_ig_sim, 'Z_stud', level = .95)[1,1]
+  ig_rd_sim[j,4] <- confint(lr_ig_sim, 'Z_stud', level = .95)[1,2]
+  
+  # Fixed Effect Sim
+  j <- count+1
+  ig_rd_sim[j,1] <- "fixed"
+  fixed_ig_sim <- lfe::felm(base_data_model$Y_stud ~ base_data_model$Z_stud + base_data_model$minority +
+                               base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch +
+                               base_data_model$dist.school.hour + base_data_model$gender + base_data_model$pretest |
+                               base_data_model$classid) 
+  ig_rd_sim[j,2] <- fixed_ig_sim$coefficients[1]
+  ig_rd_sim[j,3] <- confint(fixed_ig_sim, 'base_data_model$Z_stud', level = .95)[1,1]
+  ig_rd_sim[j,4] <- confint(fixed_ig_sim, 'base_data_model$Z_stud', level = .95)[1,2]
+  
+  # Random Effect Sim
+  j <- count+2
+  ig_rd_sim[j,1] <- "random"
+  random_ig_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                                     gender + pretest + (1 | classid), data = base_data_model) 
+  ig_rd_sim[j,2] <- summary(random_ig_sim)$coefficients[2,1]
+  ig_rd_sim[j,3] <- confint(random_ig_sim, 'Z_stud', level = .95)[1,1]
+  ig_rd_sim[j,4] <- confint(random_ig_sim, 'Z_stud', level = .95)[1,2]  
+  
+  count <- j+1
+  print(i)
+}
+
+# add random effects violation SATE to results data frame
+ig_rd_sim$SATE <- rep(SATE_ig, nrow(ig_rd_sim))
+
+# histograms for violation of ignorability assumption
+## linear regression
+hist(ig_rd_sim$coef[ig_rd_sim$type == "lr"], main = "Randomization Distribution - IV (Linear Regression)", 
+     xlab = "Treatment Effect", xlim = c(min(ig_rd_sim$coef)-.5, max = max(ig_rd_sim$coef)+.5))
+abline(v = SATE_ig, col = "red")
+
+## fixed effects
+hist(ig_rd_sim$coef[ig_rd_sim$type == "fixed"], main = "Randomization Distribution - IV (Fixed Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(ig_rd_sim$coef)-.5, max = max(ig_rd_sim$coef)+.5))
+abline(v = SATE_ig, col = "red")
+
+## random effects
+hist(ig_rd_sim$coef[ig_rd_sim$type == "random"], main = "Randomization Distribution - IV (Random Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(ig_rd_sim$coef)-.5, max = max(ig_rd_sim$coef)+.5))
+abline(v = SATE_ig, col = "red")
+
+#### Ignorability Violation Sampling Distribution ######################################################################
+
+# Generate empty data frame for results
+ig_sd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), 
+                        conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3), SATE = rep(NA, iter*3))
+
+# Initialize counts which is used for which row to store outputs in
+count <- 1
+
+for(i in 1:iter){
+  
+  #Sampling Distribution - resample data
+  base_data <- ig_dat_function(40, 25)
+  SATE_sim <- mean(base_data$Y1) - mean(base_data$Y0)
+  base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, 
+                                          fam.income, freelunch, dist.school.hour, gender, pretest, classid)
+  
+  #Linear Regression Sim
+  j <- count
+  ig_sd_sim[j,1] <- "lr"
+  lr_ig_sim <- lm(Y_stud ~., data = base_data_model[,-13])
+  ig_sd_sim[j,2] <- lr_base_sim$coefficients[2]
+  ig_sd_sim[j,3] <- confint(lr_ig_sim, 'Z_stud', level = .95)[1,1]
+  ig_sd_sim[j,4] <- confint(lr_ig_sim, 'Z_stud', level = .95)[1,2]
+  ig_sd_sim[j,5] <- SATE_sim
+  
+  #Fixed Effect Sim
+  j <- count+1
+  ig_sd_sim[j,1] <- "fixed"
+  fixed_ig_sim <- lfe::felm(base_data_model$Y_stud ~ base_data_model$Z_stud + base_data_model$minority +
+                                base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch +
+                                base_data_model$dist.school.hour + base_data_model$gender + base_data_model$pretest |
+                                base_data_model$classid) 
+  ig_sd_sim[j,2] <- fixed_base_sim$coefficients[1]
+  ig_sd_sim[j,3] <- confint(fixed_ig_sim, 'base_data_model$Z_stud', level = .95)[1,1]
+  ig_sd_sim[j,4] <- confint(fixed_ig_sim, 'base_data_model$Z_stud', level = .95)[1,2]
+  ig_sd_sim[j,5] <- SATE_sim
+  
+  #Random Effect Sim
+  j <- count+2
+  ig_sd_sim[j,1] <- "random"
+  random_ig_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                                  gender + pretest + yearstea + avgtest + teach.edu + (1 | classid), data = base_data_model) 
+  ig_sd_sim[j,2] <- summary(random_ig_sim)$coefficients[2,1]
+  ig_sd_sim[j,3] <- confint(random_ig_sim, 'Z_stud', level = .95)[1,1]
+  ig_sd_sim[j,4] <- confint(random_ig_sim, 'Z_stud', level = .95)[1,2]  
+  ig_sd_sim[j,5] <- SATE_sim
+  
+  count <- j+1
+  print(i)
+}
+
+# histograms for violation of ignorability assumption
+## linear regression
+hist(ig_sd_sim$coef[ig_sd_sim$type == "lr"], main = "Randomization Distribution - IV (Linear Regression)", 
+     xlab = "Treatment Effect", xlim = c(min(ig_sd_sim$coef)-.5, max = max(ig_sd_sim$coef)+.5))
+abline(v = mean(ig_sd_sim$SATE), col = "red")
+
+## fixed effects
+hist(ig_sd_sim$coef[ig_sd_sim$type == "fixed"], main = "Randomization Distribution - IV (Fixed Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(ig_sd_sim$coef)-.5, max = max(ig_sd_sim$coef)+.5))
+abline(v = mean(ig_sd_sim$SATE), col = "red")
+
+## random effects
+hist(ig_sd_sim$coef[ig_sd_sim$type == "random"], main = "Randomization Distribution - IV (Random Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(ig_sd_sim$coef)-.5, max = max(ig_sd_sim$coef)+.5))
+abline(v = mean(ig_sd_sim$SATE), col = "red")
+
+# TREATMENT AT GROUP LEVEL SIMULATION ###############################################################################
+#### Initial Run ######################################################################################################
+
+# Treatment Effect of the Treated @ Group Level
+model_class <- classroom_dat %>% select(Y_class, Z_class, yearstea, teach.edu, avgtest, minority, parent.edu,
+                                        fam.income, freelunch, dist.school.hour, gender, pretest, classid)
+
+# Group Level Treatment Effect Linear Regression # ignore group structure
+lr.gl <- lm(Y_class ~., data = model_class[,-13])
+
+# Group Level Treatment Effect - Linear Regression Model Bias
+(lr.gl.bias <- lr.gl$coefficients[2] - SATE)
+
+# Group Level Treatment Effect w/ Fixed Effects
+fixed.gl <- lfe::felm(model_class$Y_class ~ model_class$Z_class + model_class$minority + model_class$parent.edu +
+                        model_class$fam.income + model_class$freelunch + model_class$dist.school.hour +
+                        model_class$gender + model_class$pretest | model_class$classid)
+
+# Group Level Treatment Effect - Fixed Effects Model Bias
+## Z_class does not return coeffient - I think this makes sense since we're running the regression at the class level?
+# (fe.gl.bias <- fixed.gl$coefficients[1] - SATE)
+
+# Group Level Treatment Effect w/ Random Effects
+random.gl <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                              gender + pretest + yearstea + avgtest + teach.edu + (1 | classid), data = model_class)
+
+# Group Level Treatment Effect - Random Effects Model Bias
+(re.gl.bias <- summary(random.gl)$coefficients[2,1] - SATE)
+
+#### Group Level Randomization Distribution ######################################################################
+
+# initialize results data frame
+gl_rd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3))
+
+# initialize count number for results data frame rows
+count <- 1
+
+for(i in 1:iter){
+  
+  # Randomization Distribution - randomize treatment
+  base_data <- classroom_dat
+  N <- nrow(base_data)
+  
+  X_stud <- rnorm(N, 0, 1)
+  prob_stud <- inv.logit((X_stud/max(abs(X_stud))) * log(19))
+  Z_stud <- rbinom(N, 1, prob = prob_stud)
+  
+  base_data$Z_stud <- Z_stud
+  base_data$Y_stud <- ifelse(Z_stud == 1, base_data$Y1, base_data$Y0)
+  
+  base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, 
+                                          fam.income, freelunch, dist.school.hour, gender, pretest, classid)
+  
+  # Linear Regression Sim
+  j <- count
+  gl_rd_sim[j,1] <- "lr"
+  lr_gl_sim <- lm(Y_stud ~., data = base_data_model[,-13])
+  gl_rd_sim[j,2] <- lr_gl_sim$coefficients[2]
+  gl_rd_sim[j,3] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,1]
+  gl_rd_sim[j,4] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,2]
+  
+  # Fixed Effect Sim
+  j <- count+1
+  gl_rd_sim[j,1] <- "fixed"
+  fixed_gl_sim <- lfe::felm(base_data_model$Y_stud ~ base_data_model$Z_stud + base_data_model$minority +
+                              base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch +
+                              base_data_model$dist.school.hour + base_data_model$gender + base_data_model$pretest |
+                              base_data_model$classid) 
+  gl_rd_sim[j,2] <- fixed_gl_sim$coefficients[1]
+  gl_rd_sim[j,3] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,1]
+  gl_rd_sim[j,4] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,2]
+  
+  # Random Effect Sim
+  j <- count+2
+  gl_rd_sim[j,1] <- "random"
+  random_gl_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                                    gender + pretest + (1 | classid), data = base_data_model) 
+  gl_rd_sim[j,2] <- summary(random_gl_sim)$coefficients[2,1]
+  gl_rd_sim[j,3] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,1]
+  gl_rd_sim[j,4] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,2]  
+  
+  count <- j+1
+  print(i)
+}
+
+# add random effects violation SATE to results data frame
+gl_rd_sim$SATE <- rep(SATE, nrow(gl_rd_sim))
+
+# histograms for violation of ignorability assumption
+## linear regression
+hist(gl_rd_sim$coef[gl_rd_sim$type == "lr"], main = "Randomization Distribution - IV (Linear Regression)", 
+     xlab = "Treatment Effect", xlim = c(min(gl_rd_sim$coef)-.5, max = max(gl_rd_sim$coef)+.5))
+abline(v = SATE, col = "red")
+
+## fixed effects
+hist(gl_rd_sim$coef[gl_rd_sim$type == "fixed"], main = "Randomization Distribution - IV (Fixed Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(gl_rd_sim$coef)-.5, max = max(gl_rd_sim$coef)+.5))
+abline(v = SATE, col = "red")
+
+## random effects
+hist(ig_rd_sim$coef[ig_rd_sim$type == "random"], main = "Randomization Distribution - IV (Random Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(ig_rd_sim$coef)-.5, max = max(ig_rd_sim$coef)+.5))
+abline(v = SATE, col = "red")
+
+#### Group Level Sampling Distribution ######################################################################
+
+# Generate empty data frame for results
+gl_sd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), 
+                        conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3), SATE = rep(NA, iter*3))
+
+# Initialize counts which is used for which row to store outputs in
+count <- 1
+
+for(i in 1:iter){
+  
+  #Sampling Distribution - resample data
+  base_data <- class_dat_function(40, 25)
+  SATE_sim <- mean(base_data$Y1) - mean(base_data$Y0)
+  base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, minority, parent.edu, 
+                                          fam.income, freelunch, dist.school.hour, gender, pretest, classid)
+  
+  #Linear Regression Sim
+  j <- count
+  gl_sd_sim[j,1] <- "lr"
+  lr_gl_sim <- lm(Y_stud ~., data = base_data_model[,-13])
+  gl_sd_sim[j,2] <- lr_base_sim$coefficients[2]
+  gl_sd_sim[j,3] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,1]
+  gl_sd_sim[j,4] <- confint(lr_gl_sim, 'Z_stud', level = .95)[1,2]
+  gl_sd_sim[j,5] <- SATE_sim
+  
+  #Fixed Effect Sim
+  j <- count+1
+  gl_sd_sim[j,1] <- "fixed"
+  fixed_gl_sim <- lfe::felm(base_data_model$Y_stud ~ base_data_model$Z_stud + base_data_model$minority +
+                              base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch +
+                              base_data_model$dist.school.hour + base_data_model$gender + base_data_model$pretest |
+                              base_data_model$classid) 
+  gl_sd_sim[j,2] <- fixed_gl_sim$coefficients[1]
+  gl_sd_sim[j,3] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,1]
+  gl_sd_sim[j,4] <- confint(fixed_gl_sim, 'base_data_model$Z_stud', level = .95)[1,2]
+  gl_sd_sim[j,5] <- SATE_sim
+  
+  #Random Effect Sim
+  j <- count+2
+  gl_sd_sim[j,1] <- "random"
+  random_gl_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + dist.school.hour +
+                                    gender + pretest + yearstea + avgtest + teach.edu + (1 | classid), data = base_data_model) 
+  gl_sd_sim[j,2] <- summary(random_gl_sim)$coefficients[2,1]
+  gl_sd_sim[j,3] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,1]
+  gl_sd_sim[j,4] <- confint(random_gl_sim, 'Z_stud', level = .95)[1,2]  
+  gl_sd_sim[j,5] <- SATE_sim
+  
+  count <- j+1
+  print(i)
+}
+
+# histograms for violation of ignorability assumption
+## linear regression
+hist(gl_sd_sim$coef[gl_sd_sim$type == "lr"], main = "Randomization Distribution - IV (Linear Regression)", 
+     xlab = "Treatment Effect", xlim = c(min(gl_sd_sim$coef)-.5, max = max(gl_sd_sim$coef)+.5))
+abline(v = mean(gl_sd_sim$SATE), col = "red")
+
+## fixed effects
+hist(gl_sd_sim$coef[gl_sd_sim$type == "fixed"], main = "Randomization Distribution - IV (Fixed Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(gl_sd_sim$coef)-.5, max = max(gl_sd_sim$coef)+.5))
+abline(v = mean(gl_sd_sim$SATE), col = "red")
+
+## random effects
+hist(gl_sd_sim$coef[gl_sd_sim$type == "random"], main = "Randomization Distribution - IV (Random Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(gl_sd_sim$coef)-.5, max = max(gl_sd_sim$coef)+.5))
+abline(v = mean(gl_sd_sim$SATE), col = "red")
+
+
+
 
 
