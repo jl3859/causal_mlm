@@ -8,10 +8,10 @@ library(gridExtra)
 source("dgp_script.R") 
 
 # Set iteration number for simulations
-iter <- 10
+iter <- 100
 
 # Set seed for reproducibility
-set.seed(1234)
+set.seed(2020)
 
 # BASE SIMULATION #####################################################################################################
 
@@ -112,6 +112,7 @@ for(i in 1:iter){
 
 # Add SATE to results data frame
 base_rd_sim$SATE <- rep(SATE, nrow(base_rd_sim))
+base_rd_sim$bias <- base_rd_sim$coef - base_rd_sim$SATE
 
 # Histograms for base case randomization distribution
 hist(base_rd_sim$coef[base_rd_sim$type == "lr"], main = "Randomization Distribution - Base (Linear Regression)", xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
@@ -174,6 +175,8 @@ for(i in 1:iter){
   count <- j+1
   print(i)
 }
+
+base_sd_sim$bias <- base_sd_sim$coef - base_sd_sim$SATE
 
 # Histograms for base case sampling distribution
 hist(base_sd_sim$coef[base_sd_sim$type == "lr"], main = "Sampling Distribution - Base (Linear Regression)", 
@@ -289,7 +292,7 @@ for(i in 1:iter){
 
 # add random effects violation SATE to results data frame
 vre_rd_sim$SATE <- rep(SATE_re, nrow(vre_rd_sim))
-
+vre_rd_sim$bias <- vre_rd_sim$coef - vre_rd_sim$SATE
 
 # histograms for violation of random effects assumption
 ## linear regression
@@ -357,6 +360,8 @@ for(i in 1:iter){
   count <- j+1
   print(i)
 }
+
+vre_sd_sim$bias <- vre_sd_sim$coef - vre_sd_sim$SATE
 
 # histograms for sampling distribution - random effects violation
 ## linear regression
@@ -470,6 +475,7 @@ for(i in 1:iter){
 
 # add random effects violation SATE to results data frame
 ig_rd_sim$SATE <- rep(SATE_ig, nrow(ig_rd_sim))
+ig_rd_sim$bias <- ig_rd_sim$coef - ig_rd_sim$SATE
 
 # histograms for violation of ignorability assumption
 ## linear regression
@@ -537,6 +543,8 @@ for(i in 1:iter){
   count <- j+1
   print(i)
 }
+
+ig_sd_sim$bias <- ig_sd_sim$coef - ig_sd_sim$SATE
 
 # histograms for violation of ignorability assumption
 ## linear regression
@@ -641,6 +649,7 @@ for(i in 1:iter){
 
 # add random effects violation SATE to results data frame
 gl_rd_sim$SATE <- rep(SATE, nrow(gl_rd_sim))
+gl_rd_sim$bias <- gl_rd_sim$coef - gl_rd_sim$SATE
 
 # histograms for violation of ignorability assumption
 ## linear regression
@@ -710,6 +719,8 @@ for(i in 1:iter){
   print(i)
 }
 
+gl_sd_sim$bias <- gl_sd_sim$coef - gl_sd_sim$SATE
+
 # histograms for violation of ignorability assumption
 ## linear regression
 hist(gl_sd_sim$coef[gl_sd_sim$type == "lr"], main = "Randomization Distribution - IV (Linear Regression)", 
@@ -728,15 +739,31 @@ abline(v = mean(gl_sd_sim$SATE), col = "red")
 
 
 
-
 # BIAS COMPARISON ###################################################################################################
 
-bias_compare <- data.frame("Bias Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"), 
-                           "Base Case" = round(c(lr.base.bias, fe.base.bias, re.base.bias),4), 
-                           "RE Violation" = round(c(lr.re.bias, fe.re.bias, re.re.bias),4), 
-                           "Ig. Violation" = round(c(lr.ig.bias, fe.ig.bias, re.ig.bias),4), 
+bias_compare_initial <- data.frame("Bias Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"),
+                           "Base Case" = round(c(lr.base.bias, fe.base.bias, re.base.bias),4),
+                           "RE Violation" = round(c(lr.re.bias, fe.re.bias, re.re.bias),4),
+                           "Ig. Violation" = round(c(lr.ig.bias, fe.ig.bias, re.ig.bias),4),
                            "Group Treatment" = c(round(lr.gl.bias,4), "N/A", round(re.gl.bias,4)))
 
-grid.arrange(tableGrob(bias_compare, theme=ttheme_default()), nrow = 1)
+grid.arrange(tableGrob(bias_compare_initial, theme=ttheme_default()), nrow = 1)
+
+
+bias_compare_sim <- data.frame("Bias Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"), 
+                           "Base Case" = round(c(mean(base_rd_sim$bias[base_rd_sim$type == "lr"]), 
+                                                 mean(base_rd_sim$bias[base_rd_sim$type == "fixed"]), 
+                                                 mean(base_rd_sim$bias[base_rd_sim$type == "random"])),4), 
+                           "RE Violation" = round(c(mean(vre_rd_sim$bias[vre_rd_sim$type == "lr"]), 
+                                                    mean(vre_rd_sim$bias[vre_rd_sim$type == "fixed"]), 
+                                                    mean(vre_rd_sim$bias[vre_rd_sim$type == "random"])),4), 
+                           "Ig. Violation" = round(c(mean(ig_rd_sim$bias[ig_rd_sim$type=="lr"]), 
+                                                     mean(ig_rd_sim$bias[ig_rd_sim$type=="fixed"]), 
+                                                     mean(ig_rd_sim$bias[ig_rd_sim$type=="random"])),4), 
+                           "Group Treatment" = c(round(mean(gl_rd_sim$bias[gl_rd_sim$type == "lr"]),4), 
+                                                 "N/A", 
+                                                 round(mean(gl_rd_sim$bias[gl_rd_sim$type == "random"]),4)))
+
+grid.arrange(tableGrob(bias_compare_sim, theme=ttheme_default()), nrow = 1)
 
 
