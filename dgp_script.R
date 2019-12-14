@@ -89,10 +89,10 @@ re_dat_function <- function(classrooms, students){
   Z_class <- rbinom(classrooms, 1, prob = prob_class)
   Z_class <- rep(Z_class, each = students)
   
-  #!!! violate random effects assumption by correlating classroom_score with pretest
-  classroom_pretest <- data.frame(classid = rep(1:classrooms, each = students), pretest = pretest)
-  classroom_pretest <- classroom_pretest %>% group_by(classid) %>% summarize(pretest_mean = mean(pretest))
-  classroom_score <- rep(rnorm(classrooms, 0, 3), each = students) + .05*classroom_pretest$pretest_mean
+  #!!! violate random effects assumption by correlating classroom_score with family income
+  classroom_fam_income <- data.frame(classid = rep(1:classrooms, each = students), fam.income = fam.income)
+  classroom_fam_income <- classroom_pretest %>% group_by(classid) %>% summarize(fam.income= mean(fam.income))
+  classroom_score <- rep(rnorm(classrooms, 0, 3), each = students) + .05*classroom_fam_income$classroom_fam_income
   
   # outcomes (using both classroom-level, student-level predictors, and the random effect that is correlated with pretest)
   Y0 = 56 + 0 + 0.4*yearstea + 0.33*teach.edu + 0.74*parent.edu + 0.18*fam.income - 2.23*minority - 1.4*dist.school.hour + classroom_score +  rnorm(N, 0 ,1)
