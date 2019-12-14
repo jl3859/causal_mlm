@@ -6,10 +6,12 @@ library(lmerTest)
 source("dgp_script.R") 
 
 # Set iteration number for simulations
-iter <- 100
+iter <- 1000
 
 # Set seed for reproducibility
 set.seed(2020)
+
+classroom_dat <- class_dat_function(40, 25)
 
 # TREATMENT AT GROUP LEVEL SIMULATION ###############################################################################
 #### Initial Run ######################################################################################################
@@ -43,7 +45,10 @@ random.gl <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.inco
 #### Group Level Randomization Distribution ######################################################################
 
 # initialize results data frame
-gl_rd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3))
+gl_rd_sim <- data.frame(type = rep(NA, iter*3), 
+                        coef = rep(NA, iter*3), 
+                        conf_int_low = rep(NA, iter*3), 
+                        conf_int_high = rep(NA, iter*3))
 
 # initialize count number for results data frame rows
 count <- 1
@@ -55,11 +60,12 @@ for(i in 1:iter){
   # Randomization Distribution - randomize treatment
   avg_tea <- data.frame(classid = base_data$classid, avgtest = base_data$avgtest)
   avg_tea <- unique(avg_tea)
-  X_class <- rnorm(unique(base_data$classid), 0, 1) - (.03*avg_tea$avgtest) 
+  X_class <- rnorm(length(unique(base_data$classid)), 1, 1) - (.03*avg_tea$avgtest)
+  
   # correlate classroom treatment with classroom level predictor
   prob_class <- inv.logit((X_class/max(abs(X_class)))*log(19))
   Z_class <- rbinom(unique(base_data$classid), 1, prob = prob_class)
-  Z_class <- rep(Z_class, each = unique(base_data$studentid)/unique(base_data$classid))
+  Z_class <- rep(Z_class, each = (length(unique(base_data$studentid))/length(unique(base_data$classid))))
   
   base_data$Z_class <- Z_class
   base_data$Y_class <- ifelse(Z_class == 1, base_data$Y1, base_data$Y0)
@@ -104,9 +110,14 @@ gl_rd_sim$SATE <- rep(SATE, nrow(gl_rd_sim))
 gl_rd_sim$bias <- gl_rd_sim$coef - gl_rd_sim$SATE
 
 # Create separate dataframes for the different models
-gl_lr_sd_sim <- gl_rd_sim %>% filter(type == "lr")
-gl_fixed_sd_sim <- gl_rd_sim %>% filter(type == "fixed")
-gl_random_sd_sim <- gl_rd_sim %>% filter(type == "random")
+gl_lr_rd_sim <- gl_rd_sim %>% filter(type == "lr")
+gl_fixed_rd_sim <- gl_rd_sim %>% filter(type == "fixed")
+gl_random_rd_sim <- gl_rd_sim %>% filter(type == "random")
+
+write_csv(gl_lr_rd_sim, "output/gl_lr_rd_sim.csv")
+write_csv(gl_fixed_rd_sim, "output/gl_fixed_rd_sim.csv")
+write_csv(gl_random_rd_sim, "output/gl_random_rd_sim.csv")
+write_csv(gl_rd_sim, "output/gl_full_rd_sim.csv")
 
 
 #### Group Level Sampling Distribution ######################################################################
@@ -130,7 +141,7 @@ for(i in 1:iter){
   j <- count
   gl_sd_sim[j,1] <- "lr"
   lr_gl_sim <- lm(Y_class ~., data = base_data_model[,-13])
-  gl_sd_sim[j,2] <- lr_base_sim$coefficients[2]
+  gl_sd_sim[j,2] <- lr_gl_sim$coefficients[2]
   gl_sd_sim[j,3] <- confint(lr_gl_sim, 'Z_class', level = .95)[1,1]
   gl_sd_sim[j,4] <- confint(lr_gl_sim, 'Z_class', level = .95)[1,2]
   gl_sd_sim[j,5] <- SATE_sim
@@ -168,7 +179,10 @@ gl_lr_sd_sim <- gl_sd_sim %>% filter(type == "lr")
 gl_fixed_sd_sim <- gl_sd_sim %>% filter(type == "fixed")
 gl_random_sd_sim <- gl_sd_sim %>% filter(type == "random")
 
-
+write_csv(gl_lr_sd_sim, "output/gl_lr_sd_sim.csv")
+write_csv(gl_fixed_sd_sim, "output/gl_fixed_sd_sim.csv")
+write_csv(gl_random_sd_sim, "output/gl_random_sd_sim.csv")
+write_csv(gl_sd_sim, "output/gl_full_sd_sim.csv")
 
 
 

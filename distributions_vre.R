@@ -1,4 +1,6 @@
-source("simulation_vre.R") 
+library(tidyverse)
+vre_rd_sim <- read_csv("output/vre_full_rd_sim.csv")
+vre_sd_sim <- read_csv("output/vre_full_sd_sim.csv")
 
 # histograms for violation of random effects assumption
 par(mfrow=c(1,3))
@@ -19,6 +21,7 @@ abline(v = SATE_re, col = "red")
 
 
 # histograms for sampling distribution - random effects violation
+par(mfrow=c(1,3))
 ## linear regression
 hist(vre_sd_sim$coef[vre_sd_sim$type == "lr"], main = "Sampling Distribution - VRE (Linear Regression)", 
      xlab = "Treatment Effect", xlim = c(min(vre_sd_sim$coef)-.5, max = max(vre_sd_sim$coef)+.5))

@@ -6,7 +6,7 @@ library(lmerTest)
 source("dgp_script.R") 
 
 # Set iteration number for simulations
-iter <- 100
+iter <- 1000
 
 # Set seed for reproducibility
 set.seed(2020)
@@ -47,7 +47,10 @@ random.re <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income
 #### REV Randomization Distribution ###################################################################################
 
 # initialize results data frame
-vre_rd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3))
+vre_rd_sim <- data.frame(type = rep(NA, iter*3), 
+                         coef = rep(NA, iter*3), 
+                         conf_int_low = rep(NA, iter*3), 
+                         conf_int_high = rep(NA, iter*3))
 
 # initialize count number for results data frame rows
 count <- 1
@@ -108,11 +111,20 @@ vre_lr_rd_sim <- vre_rd_sim %>% filter(type == "lr")
 vre_fixed_rd_sim <- vre_rd_sim %>% filter(type == "fixed")
 vre_random_rd_sim <- vre_rd_sim %>% filter(type == "random")
 
+write_csv(vre_lr_rd_sim, "output/vre_lr_rd_sim.csv")
+write_csv(vre_fixed_rd_sim, "output/vre_fixed_rd_sim.csv")
+write_csv(vre_random_rd_sim, "output/vre_random_rd_sim.csv")
+write_csv(vre_rd_sim, "output/vre_full_rd_sim.csv")
+
 
 #### REV Sampling Distribution ########################################################################################
 
 # initialize results data frame
-vre_sd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3), SATE = rep(NA, iter*3))
+vre_sd_sim <- data.frame(type = rep(NA, iter*3), 
+                         coef = rep(NA, iter*3), 
+                         conf_int_low = rep(NA, iter*3), 
+                         conf_int_high = rep(NA, iter*3), 
+                         SATE = rep(NA, iter*3))
 
 # initialize count number for results data frame rows
 count <- 1
@@ -163,5 +175,12 @@ for(i in 1:iter){
 vre_sd_sim$bias <- vre_sd_sim$coef - vre_sd_sim$SATE
 
 # Create separate dataframes for the different models
+vre_lr_sd_sim <- vre_sd_sim %>% filter(type == "lr")
 vre_fixed_sd_sim <- vre_sd_sim %>% filter(type == "fixed")
 vre_random_sd_sim <- vre_sd_sim %>% filter(type == "random")
+
+write_csv(vre_lr_sd_sim, "output/vre_lr_d_sim.csv")
+write_csv(vre_fixed_sd_sim, "output/vre_fixed_sd_sim.csv")
+write_csv(vre_random_sd_sim, "output/vre_random_d_sim.csv")
+write_csv(vre_sd_sim, "output/vre_full_sd_sim.csv")
+

@@ -1,14 +1,19 @@
-source("simulation_base.R") 
+library(tidyverse)
+base_rd_sim <- read_csv("output/base_full_rd_sim.csv")
+base_sd_sim <- read_csv("output/base_full_sd_sim.csv")
 
 # Histograms for base case randomization distribution
 par(mfrow=c(1,3))
-hist(base_rd_sim$coef[base_rd_sim$type == "lr"], main = "Randomization Distribution - Base (Linear Regression)", xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
+hist(base_rd_sim$coef[base_rd_sim$type == "lr"], main = "Randomization Distribution - Base (Linear Regression)", 
+     xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
 abline(v = SATE, col = "red")
 
-hist(base_rd_sim$coef[base_rd_sim$type == "fixed"], main = "Randomization Distribution - Base (Fixed Effects)", xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
+hist(base_rd_sim$coef[base_rd_sim$type == "fixed"], main = "Randomization Distribution - Base (Fixed Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
 abline(v = SATE, col = "red")
 
-hist(base_rd_sim$coef[base_rd_sim$type == "random"], main = "Randomization Distribution - Base (Random Effects)", xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
+hist(base_rd_sim$coef[base_rd_sim$type == "random"], main = "Randomization Distribution - Base (Random Effects)", 
+     xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
 abline(v = SATE, col = "red")
 
 # Histograms for base case sampling distribution

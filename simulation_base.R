@@ -6,7 +6,7 @@ library(lmerTest)
 source("dgp_script.R") 
 
 # Set iteration number for simulations
-iter <- 100
+iter <- 1000
 
 # Set seed for reproducibility
 set.seed(2020)
@@ -118,11 +118,20 @@ base_lr_rd_sim <- base_rd_sim %>% filter(type == "lr")
 base_fixed_rd_sim <- base_rd_sim %>% filter(type == "fixed")
 base_random_rd_sim <- base_rd_sim %>% filter(type == "random")
 
+write_csv(base_lr_rd_sim, "output/base_lr_rd_sim.csv")
+write_csv(base_fixed_rd_sim, "output/base_fixed_rd_sim.csv")
+write_csv(base_random_rd_sim, "output/base_random_rd_sim.csv")
+write_csv(base_rd_sim, "output/base_full_rd_sim.csv")
+
+
 #### Base Sampling Distribution #######################################################################################
 
 # Generate empty data frame for results
-base_sd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), 
-                          conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3), SATE = rep(NA, iter*3))
+base_sd_sim <- data.frame(type = rep(NA, iter*3), 
+                          coef = rep(NA, iter*3), 
+                          conf_int_low = rep(NA, iter*3), 
+                          conf_int_high = rep(NA, iter*3), 
+                          SATE = rep(NA, iter*3))
 
 # Initialize counts which is used for which row to store outputs in
 count <- 1
@@ -176,3 +185,8 @@ base_sd_sim$bias <- base_sd_sim$coef - base_sd_sim$SATE
 base_lr_sd_sim <- base_sd_sim %>% filter(type == "lr")
 base_fixed_sd_sim <- base_sd_sim %>% filter(type == "fixed")
 base_random_sd_sim <- base_sd_sim %>% filter(type == "random")
+
+write_csv(base_lr_sd_sim, "output/base_lr_sd_sim.csv")
+write_csv(base_fixed_sd_sim, "output/base_fixed_sd_sim.csv")
+write_csv(base_random_sd_sim, "output/base_random_sd_sim.csv")
+write_csv(base_sd_sim, "output/base_full_sd_sim.csv")

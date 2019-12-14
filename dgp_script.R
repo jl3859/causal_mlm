@@ -33,7 +33,7 @@ class_dat_function <- function(classrooms, students){
   # random probability of assignment at classroom-level 
   avg_tea <- data.frame(classid = rep(1:classrooms, each = students), avgtest = avgtest)
   avg_tea <- unique(avg_tea)
-  X_class <- rnorm(classrooms, 0, 1) - (.03*avg_tea$avgtest) # correlate classroom treatment with classroom level predictor
+  X_class <- rnorm(classrooms, 1, 1) - (.03*avg_tea$avgtest) # correlate classroom treatment with classroom level predictor
   prob_class <- inv.logit((X_class/max(abs(X_class)))*log(19))
   Z_class <- rbinom(classrooms, 1, prob = prob_class)
   Z_class <- rep(Z_class, each = students)
@@ -84,7 +84,7 @@ re_dat_function <- function(classrooms, students){
   # random probability of assignment at classroom-level
   avg_tea <- data.frame(classid = rep(1:classrooms, each = students), avgtest = avgtest)
   avg_tea <- unique(avg_tea)
-  X_class <- rnorm(classrooms, 0, 1) - (0.1*avg_tea$avgtest) # correlate classroom treatment with classroom level predictor
+  X_class <- rnorm(classrooms, 1, 1) - (.03*avg_tea$avgtest) # correlate classroom treatment with classroom level predictor
   prob_class <- inv.logit((X_class/max(abs(X_class)))*log(19))
   Z_class <- rbinom(classrooms, 1, prob = prob_class)
   Z_class <- rep(Z_class, each = students)
@@ -163,6 +163,7 @@ ig_dat_function <- function(classrooms, students){
                               minority = as.factor(minority), parent.edu = as.factor(parent.edu), fam.income = fam.income,  
                               freelunch = as.factor(freelunch), gender = as.factor(gender), pretest = pretest,
                               classid = as.factor(rep(1:classrooms, each = students)), studentid  = 1:N, 
+                              dist.school.hour = dist.school.hour,
                               Z_stud = Z_stud, Y0 = Y0, Y1 = Y1, Y_stud = Y_stud)
   
   return(classroom_dat)

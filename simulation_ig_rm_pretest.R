@@ -6,7 +6,7 @@ library(lmerTest)
 source("dgp_script.R") 
 
 # Set iteration number for simulations
-iter <- 1000
+iter <- 100
 
 # Set seed for reproducibility
 set.seed(2020)
@@ -20,7 +20,7 @@ ig_dat <- ig_dat_function(40, 25)
 SATE_ig <- mean(ig_dat$Y1) - mean(ig_dat$Y0)
 model_ig <- ig_dat %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest,
                               minority, parent.edu, fam.income, 
-                              freelunch, gender, pretest, classid)
+                              freelunch, gender, dist.school.hour, classid)
 
 #### Initial Run ######################################################################################################
 
@@ -32,13 +32,13 @@ lr.ig <- lm(Y_stud ~., data = model_ig[,-12])
 
 # Ignorability Violation w/ Fixed Effects
 fixed.ig <- lfe::felm(model_ig$Y_stud ~ model_ig$Z_stud + model_ig$minority + model_ig$parent.edu + 
-                        model_ig$fam.income + model_ig$freelunch + model_ig$gender + model_ig$pretest | model_ig$classid)
+                        model_ig$fam.income + model_ig$freelunch + model_ig$gender + model_ig$dist.school.hour | model_ig$classid)
 
 # Ignorability Violation - Fixed Effects Model Bias
 (fe.ig.bias <- fixed.base$coefficients[1] - SATE_ig)
 
 # Ignorability Violation w/ Random Effects
-random.ig <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + gender + pretest + 
+random.ig <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + gender + dist.school.hour + 
                               yearstea + avgtest + teach.edu + (1 | classid), data = model_ig)
 
 # Ignorability Violation - Random Effects Model Bias
@@ -76,7 +76,7 @@ for(i in 1:iter){
   
   base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, 
                                           avgtest, minority, parent.edu, fam.income, 
-                                          freelunch, gender, pretest, classid)
+                                          freelunch, gender, dist.school.hour, classid)
   
   # Linear Regression Sim
   j <- count
@@ -91,7 +91,7 @@ for(i in 1:iter){
   ig_rd_sim[j,1] <- "fixed"
   fixed_ig_sim <- lfe::felm(base_data_model$Y_stud ~ base_data_model$Z_stud + base_data_model$minority + 
                               base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch + 
-                              base_data_model$gender + base_data_model$pretest | base_data_model$classid)
+                              base_data_model$gender + base_data_model$dist.school.hour | base_data_model$classid)
   ig_rd_sim[j,2] <- fixed_ig_sim$coefficients[1]
   ig_rd_sim[j,3] <- confint(fixed_ig_sim, 'base_data_model$Z_stud', level = .95)[1,1]
   ig_rd_sim[j,4] <- confint(fixed_ig_sim, 'base_data_model$Z_stud', level = .95)[1,2]
@@ -99,7 +99,7 @@ for(i in 1:iter){
   # Random Effect Sim
   j <- count+2
   ig_rd_sim[j,1] <- "random"
-  random_ig_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + gender + pretest + 
+  random_ig_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + gender + dist.school.hour + 
                                     yearstea + avgtest + teach.edu + (1 | classid), data = base_data_model)
   ig_rd_sim[j,2] <- summary(random_ig_sim)$coefficients[2,1]
   ig_rd_sim[j,3] <- confint(random_ig_sim, 'Z_stud', level = .95)[1,1]
@@ -138,7 +138,7 @@ for(i in 1:iter){
   SATE_sim <- mean(base_data$Y1) - mean(base_data$Y0)
   base_data_model <- base_data %>% select(Y_stud, Z_stud, yearstea, teach.edu, avgtest, 
                                           minority, parent.edu, fam.income, 
-                                          freelunch, gender, pretest, classid)
+                                          freelunch, gender, dist.school.hour, classid)
   
   #Linear Regression Sim
   j <- count
@@ -154,7 +154,7 @@ for(i in 1:iter){
   ig_sd_sim[j,1] <- "fixed"
   fixed_ig_sim <- lfe::felm(base_data_model$Y_stud ~ base_data_model$Z_stud + base_data_model$minority + 
                               base_data_model$parent.edu + base_data_model$fam.income + base_data_model$freelunch + 
-                              base_data_model$gender + base_data_model$pretest | base_data_model$classid)
+                              base_data_model$gender + base_data_model$dist.school.hour | base_data_model$classid)
   ig_sd_sim[j,2] <- fixed_ig_sim$coefficients[1]
   ig_sd_sim[j,3] <- confint(fixed_ig_sim, 'base_data_model$Z_stud', level = .95)[1,1]
   ig_sd_sim[j,4] <- confint(fixed_ig_sim, 'base_data_model$Z_stud', level = .95)[1,2]
@@ -163,7 +163,7 @@ for(i in 1:iter){
   #Random Effect Sim
   j <- count+2
   ig_sd_sim[j,1] <- "random"
-  random_ig_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + gender + pretest + 
+  random_ig_sim <- lmerTest::lmer(Y_stud ~ Z_stud + minority + parent.edu + fam.income + freelunch + gender + dist.school.hour + 
                                     yearstea + avgtest + teach.edu + (1 | classid), data = base_data_model)
   ig_sd_sim[j,2] <- summary(random_ig_sim)$coefficients[2,1]
   ig_sd_sim[j,3] <- confint(random_ig_sim, 'Z_stud', level = .95)[1,1]
