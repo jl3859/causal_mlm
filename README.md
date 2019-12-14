@@ -1,4 +1,4 @@
-# Causal Final: Simulation study of linear multilevel models
+# Causal Final: Simulation Study of Linear Multilevel Models
 
 Scripts:
 1. dgp.script.R
