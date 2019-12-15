@@ -517,8 +517,11 @@ abline(v = SATE_ig, col = "red")
 #### Ignorability Violation Sampling Distribution ######################################################################
 
 # Generate empty data frame for results
-ig_sd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), 
-                        conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3), SATE = rep(NA, iter*3))
+ig_sd_sim <- data.frame(type = rep(NA, iter*3), 
+                        coef = rep(NA, iter*3), 
+                        conf_int_low = rep(NA, iter*3), 
+                        conf_int_high = rep(NA, iter*3), 
+                        SATE = rep(NA, iter*3))
 
 # Initialize counts which is used for which row to store outputs in
 count <- 1
@@ -603,8 +606,7 @@ fixed.gl <- lfe::felm(model_class$Y_class ~ model_class$Z_class + model_class$mi
                         model_class$gender + model_class$pretest | model_class$classid)
 
 # Group Level Treatment Effect - Fixed Effects Model Bias
-## Z_class does not return coeffient - I think this makes sense since we're running the regression at the class level?
-# (fe.gl.bias <- fixed.gl$coefficients[1] - SATE)
+## Z_class does not return coeffient
 
 # Group Level Treatment Effect w/ Random Effects
 random.gl <- lmerTest::lmer(Y_class ~ Z_class + minority + parent.edu + fam.income + freelunch + dist.school.hour +
@@ -631,11 +633,11 @@ for(i in 1:iter){
   # Randomization Distribution - randomize treatment
   avg_tea <- data.frame(classid = base_data$classid, avgtest = base_data$avgtest)
   avg_tea <- unique(avg_tea)
-  X_class <- rnorm(length(unique(base_data$classid)), 1, 1) - (.03*avg_tea$avgtest)
+  X_class <- rnorm(length(unique(base_data$classid)), 1, 1) - (.01*avg_tea$avgtest)
   
   # correlate classroom treatment with classroom level predictor
   prob_class <- inv.logit((X_class/max(abs(X_class)))*log(19))
-  Z_class <- rbinom(unique(base_data$classid), 1, prob = prob_class)
+  Z_class <- rbinom(length(unique(base_data$classid)), 1, prob = prob_class)
   Z_class <- rep(Z_class, each = (length(unique(base_data$studentid))/length(unique(base_data$classid))))
   
   base_data$Z_class <- Z_class
@@ -676,31 +678,34 @@ for(i in 1:iter){
   print(i)
 }
 
-# add random effects violation SATE to results data frame
+# add SATE to results data frame
 gl_rd_sim$SATE <- rep(SATE, nrow(gl_rd_sim))
 gl_rd_sim$bias <- gl_rd_sim$coef - gl_rd_sim$SATE
 
 # histograms for group level treatment effect
 ## linear regression
-hist(gl_rd_sim$coef[gl_rd_sim$type == "lr"], main = "Randomization Distribution - IV (Linear Regression)", 
+hist(gl_rd_sim$coef[gl_rd_sim$type == "lr"], main = "Randomization Distribution - GL (Linear Regression)", 
      xlab = "Treatment Effect", xlim = c(min(gl_rd_sim$coef)-.5, max = max(gl_rd_sim$coef)+.5))
 abline(v = SATE, col = "red")
 
 ## fixed effects
-hist(gl_rd_sim$coef[gl_rd_sim$type == "fixed"], main = "Randomization Distribution - IV (Fixed Effects)", 
+hist(gl_rd_sim$coef[gl_rd_sim$type == "fixed"], main = "Randomization Distribution - GL (Fixed Effects)", 
      xlab = "Treatment Effect", xlim = c(min(gl_rd_sim$coef)-.5, max = max(gl_rd_sim$coef)+.5))
 abline(v = SATE, col = "red")
 
 ## random effects
-hist(gl_rd_sim$coef[gl_rd_sim$type == "random"], main = "Randomization Distribution - IV (Random Effects)", 
+hist(gl_rd_sim$coef[gl_rd_sim$type == "random"], main = "Randomization Distribution - GL (Random Effects)", 
      xlab = "Treatment Effect", xlim = c(min(gl_rd_sim$coef)-.5, max = max(gl_rd_sim$coef)+.5))
 abline(v = SATE, col = "red")
 
 #### Group Level Sampling Distribution ######################################################################
 
 # Generate empty data frame for results
-gl_sd_sim <- data.frame(type = rep(NA, iter*3), coef = rep(NA, iter*3), 
-                        conf_int_low = rep(NA, iter*3), conf_int_high = rep(NA, iter*3), SATE = rep(NA, iter*3))
+gl_sd_sim <- data.frame(type = rep(NA, iter*3), 
+                        coef = rep(NA, iter*3), 
+                        conf_int_low = rep(NA, iter*3), 
+                        conf_int_high = rep(NA, iter*3), 
+                        SATE = rep(NA, iter*3))
 
 # Initialize counts which is used for which row to store outputs in
 count <- 1
@@ -752,17 +757,17 @@ gl_sd_sim$bias <- gl_sd_sim$coef - gl_sd_sim$SATE
 
 # histograms for group level treatment effect
 ## linear regression
-hist(gl_sd_sim$coef[gl_sd_sim$type == "lr"], main = "Randomization Distribution - IV (Linear Regression)", 
+hist(gl_sd_sim$coef[gl_sd_sim$type == "lr"], main = "Randomization Distribution - GL (Linear Regression)", 
      xlab = "Treatment Effect", xlim = c(min(gl_sd_sim$coef)-.5, max = max(gl_sd_sim$coef)+.5))
 abline(v = mean(gl_sd_sim$SATE), col = "red")
 
 ## fixed effects
-hist(gl_sd_sim$coef[gl_sd_sim$type == "fixed"], main = "Randomization Distribution - IV (Fixed Effects)", 
+hist(gl_sd_sim$coef[gl_sd_sim$type == "fixed"], main = "Randomization Distribution - GL (Fixed Effects)", 
      xlab = "Treatment Effect", xlim = c(min(gl_sd_sim$coef)-.5, max = max(gl_sd_sim$coef)+.5))
 abline(v = mean(gl_sd_sim$SATE), col = "red")
 
 ## random effects
-hist(gl_sd_sim$coef[gl_sd_sim$type == "random"], main = "Randomization Distribution - IV (Random Effects)", 
+hist(gl_sd_sim$coef[gl_sd_sim$type == "random"], main = "Randomization Distribution - GL (Random Effects)", 
      xlab = "Treatment Effect", xlim = c(min(gl_sd_sim$coef)-.5, max = max(gl_sd_sim$coef)+.5))
 abline(v = mean(gl_sd_sim$SATE), col = "red")
 
