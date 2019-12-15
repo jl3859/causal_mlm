@@ -4,17 +4,20 @@ base_sd_sim <- read_csv("output/base_full_sd_sim.csv")
 
 # Histograms for base case randomization distribution
 par(mfrow=c(1,3))
-hist(base_rd_sim$coef[base_rd_sim$type == "lr"], main = "Randomization Distribution - Base (Linear Regression)", 
+hist(base_rd_sim$coef[base_rd_sim$type == "lr"], main = "Base - Linear Regression", 
      xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
-abline(v = SATE, col = "red")
+abline(v = SATE, col = "blue", lty = "solid")
+abline(v = mean(base_rd_sim$coef[base_rd_sim$type == "lr"]), col = "red", lty = "dashed")
 
-hist(base_rd_sim$coef[base_rd_sim$type == "fixed"], main = "Randomization Distribution - Base (Fixed Effects)", 
+hist(base_rd_sim$coef[base_rd_sim$type == "fixed"], main = "Base - Fixed Effects", 
      xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
-abline(v = SATE, col = "red")
+abline(v = SATE, col = "blue", lty = "solid")
+abline(v = mean(base_rd_sim$coef[base_rd_sim$type == "fixed"]), col = "red", lty = "dashed")
 
-hist(base_rd_sim$coef[base_rd_sim$type == "random"], main = "Randomization Distribution - Base (Random Effects)", 
+hist(base_rd_sim$coef[base_rd_sim$type == "random"], main = "Base - Random Effects", 
      xlab = "Treatment Effect", xlim = c(min(base_rd_sim$coef)-.5, max = max(base_rd_sim$coef)+.5))
-abline(v = SATE, col = "red")
+abline(v = SATE, col = "blue", lty = "solid")
+abline(v = mean(base_rd_sim$coef[base_rd_sim$type == "random"]), col = "red", lty = "dashed")
 
 # Histograms for base case sampling distribution
 par(mfrow=c(1,3))
