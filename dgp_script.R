@@ -33,7 +33,7 @@ class_dat_function <- function(classrooms, students){
   # random probability of assignment at classroom-level 
   avg_tea <- data.frame(classid = rep(1:classrooms, each = students), avgtest = avgtest)
   avg_tea <- unique(avg_tea)
-  X_class <- rnorm(classrooms, 1, 1) - (.03*avg_tea$avgtest) # correlate classroom treatment with classroom level predictor
+  X_class <- rnorm(classrooms, 1, 1) - (.01*avg_tea$avgtest) # correlate classroom treatment with classroom level predictor
   prob_class <- inv.logit((X_class/max(abs(X_class)))*log(19))
   Z_class <- rbinom(classrooms, 1, prob = prob_class)
   Z_class <- rep(Z_class, each = students)
@@ -55,7 +55,7 @@ class_dat_function <- function(classrooms, students){
   return(classroom_dat)
 }
 
-### Violate Random Effects Assumption: correlate the classroom_score (the random effect with mean classroom pretest scores)
+### Violate Random Effects Assumption: correlate classroom_score (the random effect) with mean classroom family income
 
 re_dat_function <- function(classrooms, students){
   # classroom level covariates
@@ -84,7 +84,7 @@ re_dat_function <- function(classrooms, students){
   # random probability of assignment at classroom-level
   avg_tea <- data.frame(classid = rep(1:classrooms, each = students), avgtest = avgtest)
   avg_tea <- unique(avg_tea)
-  X_class <- rnorm(classrooms, 1, 1) - (.03*avg_tea$avgtest) # correlate classroom treatment with classroom level predictor
+  X_class <- rnorm(classrooms, 1, 1) - (.01*avg_tea$avgtest) # correlate classroom treatment with classroom level predictor
   prob_class <- inv.logit((X_class/max(abs(X_class)))*log(19))
   Z_class <- rbinom(classrooms, 1, prob = prob_class)
   Z_class <- rep(Z_class, each = students)
