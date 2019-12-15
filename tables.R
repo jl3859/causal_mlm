@@ -3,11 +3,10 @@ library(gridExtra)
 # Source data generation process functions
 oldtime <- Sys.time()
 source("dgp_script.R") 
-source("simulation_base.R")
-source("simulation_ig.R")
-source("simulation_vre.R")
-source("simulation_gl.R")
+source("simulation_script.R")
+
 Sys.time() - oldtime
+
 # BIAS COMPARISON ###################################################################################################
 
 # From base models 
@@ -24,13 +23,13 @@ grid.arrange(tableGrob(bias_compare_initial, theme=ttheme_default()), nrow = 1)
 bias_compare_rd_sim <- data.frame("Bias Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"), 
                                "Base Case" = round(c(mean(base_rd_sim$bias[base_rd_sim$type == "lr"]), 
                                                      mean(base_rd_sim$bias[base_rd_sim$type == "fixed"]), 
-                                                     mean(base_rd_sim$bias[base_rd_sim$type == "random"])),4), 
-                               "RE Violation" = round(c(mean(vre_rd_sim$bias[vre_rd_sim$type == "lr"]), 
-                                                        mean(vre_rd_sim$bias[vre_rd_sim$type == "fixed"]), 
-                                                        mean(vre_rd_sim$bias[vre_rd_sim$type == "random"])),4), 
-                               "Ig. Violation" = round(c(mean(ig_rd_sim$bias[ig_rd_sim$type=="lr"]), 
+                                                     mean(base_rd_sim$bias[base_rd_sim$type == "random"])),4),
+                               "Ig Violation" = round(c(mean(ig_rd_sim$bias[ig_rd_sim$type=="lr"]), 
                                                          mean(ig_rd_sim$bias[ig_rd_sim$type=="fixed"]), 
                                                          mean(ig_rd_sim$bias[ig_rd_sim$type=="random"])),4), 
+                               "RE Violation" = round(c(mean(vre_rd_sim$bias[vre_rd_sim$type == "lr"]), 
+                                                        mean(vre_rd_sim$bias[vre_rd_sim$type == "fixed"]), 
+                                                        mean(vre_rd_sim$bias[vre_rd_sim$type == "random"])),4),
                                "Group Treatment" = c(round(mean(gl_rd_sim$bias[gl_rd_sim$type == "lr"]),4), 
                                                      "N/A", 
                                                      round(mean(gl_rd_sim$bias[gl_rd_sim$type == "random"]),4)))
@@ -53,6 +52,22 @@ bias_compare_sd_sim <- data.frame("Bias Comparison" = c("Linear Regression", "Fi
                                                         round(mean(gl_sd_sim$bias[gl_sd_sim$type == "random"]),4)))
 
 grid.arrange(tableGrob(bias_compare_sd_sim, theme=ttheme_default()), nrow = 1)
+
+# Subset simulation results by model type
+base_lr_rd_sim <- base_rd_sim %>% filter(type == "lr")
+base_fixed_rd_sim <- base_rd_sim %>% filter(type == "fixed")
+base_random_rd_sim <- base_rd_sim %>% filter(type == "random")
+
+vre_lr_rd_sim <- vre_rd_sim %>% filter(type == "lr")
+vre_fixed_rd_sim <- vre_rd_sim %>% filter(type == "fixed")
+vre_random_rd_sim <- vre_rd_sim %>% filter(type == "random")
+
+ig_lr_rd_sim <- ig_rd_sim %>% filter(type == "lr")
+ig_fixed_rd_sim <- ig_rd_sim %>% filter(type == "fixed")
+ig_random_rd_sim <- ig_rd_sim %>% filter(type == "random")
+
+gl_lr_rd_sim <- gl_rd_sim %>% filter(type == "lr")
+gl_random_rd_sim <- gl_rd_sim %>% filter(type == "random")
 
 
 #### RMSE and CI
@@ -120,13 +135,20 @@ gl_random_in_ci
 ## RMSE ####
 rmse_rd_compare <- data.frame("RMSE Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"),
                                    "Base Case" = round(c(base_lr_rmse, base_fixed_rmse, base_random_rmse),2),
+                                   "Ig Violation" = round(c(ig_lr_rmse, ig_fixed_rmse, ig_random_rmse),2),
                                    "RE Violation" = round(c(vre_lr_rmse, vre_fixed_rmse, vre_random_rmse),2),
-                                   "Ig. Violation" = round(c(ig_lr_rmse, ig_fixed_rmse, ig_random_rmse),2),
-                                   "Group Treatment" = c(round(gl_lr_rmse,4), "N/A", round(gl_random_rmse,2)))
+                                   "Group Treatment" = c(round(gl_lr_rmse,2), "N/A", round(gl_random_rmse,2)))
 
 grid.arrange(tableGrob(rmse_rd_compare, theme=ttheme_default()), nrow = 1)
 
 ## CI ### 
+## all 100% ###
+ci_rd_compare <- data.frame("CI Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"),
+                              "Base Case" = round(c(base_lr_in_ci, base_fixed_in_ci, base_random_in_ci),2),
+                              "RE Violation" = round(c(vre_lr_in_ci, vre_fixed_in_ci, vre_random_in_ci),2),
+                              "Ig. Violation" = round(c(ig_lr_in_ci, ig_fixed_in_ci, ig_random_in_ci),2),
+                              "Group Treatment" = c(round(gl_lr_in_ci,4), "N/A", round(gl_random_in_ci,2)))
 
+grid.arrange(tableGrob(ci_rd_compare, theme=ttheme_default()), nrow = 1)
 
 
