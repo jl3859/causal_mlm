@@ -9,12 +9,12 @@ source("dgp_script.R")
 iter <- 1000
 
 # Set seed for reproducibility
-set.seed(2020)
+set.seed(2123)
 
 # RANDOM EFFECTS VIOLATION SIMULATION #################################################################################
 
 ## call random effects dgp and store data frame
-re_dat <- re_dat_function(40, 25)
+re_dat <- re_dat_function(40, 25) 
 
 ## store SATE and generate data frame for models
 SATE_re <- mean(re_dat$Y1) - mean(re_dat$Y0)
