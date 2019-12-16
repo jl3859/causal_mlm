@@ -74,62 +74,62 @@ gl_random_rd_sim <- gl_rd_sim %>% filter(type == "random")
 ## base ####
 ## lr
 base_lr_rmse <- sqrt(mean((base_lr_rd_sim$coef - base_lr_rd_sim$SATE)^2))
-base_lr_in_ci <- sum(base_lr_rd_sim$coef > base_lr_rd_sim$conf_int_low & base_lr_rd_sim$coef < base_lr_rd_sim$conf_int_high)/nrow(base_lr_rd_sim)
+base_lr_in_ci <- sum(base_lr_rd_sim$SATE > base_lr_rd_sim$conf_int_low & base_lr_rd_sim$SATE < base_lr_rd_sim$conf_int_high)/nrow(base_lr_rd_sim)
 base_lr_in_ci
 
 ## fixed
 base_fixed_rmse <- sqrt(mean((base_fixed_rd_sim$coef - base_fixed_rd_sim$SATE)^2))
-base_fixed_in_ci <- sum(base_fixed_rd_sim$coef > base_fixed_rd_sim$conf_int_low & base_fixed_rd_sim$coef < base_fixed_rd_sim$conf_int_high)/nrow(base_fixed_rd_sim)
+base_fixed_in_ci <- sum(base_fixed_rd_sim$SATE > base_fixed_rd_sim$conf_int_low & base_fixed_rd_sim$SATE < base_fixed_rd_sim$conf_int_high)/nrow(base_fixed_rd_sim)
 base_fixed_in_ci
 
 ## random
 base_random_rmse <- sqrt(mean((base_random_rd_sim$coef - base_random_rd_sim$SATE)^2))
-base_random_in_ci <- sum(base_random_rd_sim$coef > base_random_rd_sim$conf_int_low & base_random_rd_sim$coef < base_random_rd_sim$conf_int_high)/nrow(base_random_rd_sim)
+base_random_in_ci <- sum(base_random_rd_sim$SATE > base_random_rd_sim$conf_int_low & base_random_rd_sim$SATE < base_random_rd_sim$conf_int_high)/nrow(base_random_rd_sim)
 base_random_in_ci
 
 ## violate random effects assumption ####
 ## lr
 vre_lr_rmse <- sqrt(mean((vre_lr_rd_sim$coef - vre_lr_rd_sim$SATE)^2))
-vre_lr_in_ci <- sum(vre_lr_rd_sim$coef > vre_lr_rd_sim$conf_int_low & vre_lr_rd_sim$coef < vre_lr_rd_sim$conf_int_high)/nrow(vre_lr_rd_sim)
+vre_lr_in_ci <- sum(vre_lr_rd_sim$SATE > vre_lr_rd_sim$conf_int_low & vre_lr_rd_sim$SATE < vre_lr_rd_sim$conf_int_high)/nrow(vre_lr_rd_sim)
 vre_lr_in_ci
 
 ## fixed
 vre_fixed_rmse <- sqrt(mean((vre_fixed_rd_sim$coef - vre_fixed_rd_sim$SATE)^2))
-vre_fixed_in_ci <- sum(vre_fixed_rd_sim$coef > vre_fixed_rd_sim$conf_int_low & vre_fixed_rd_sim$coef < vre_fixed_rd_sim$conf_int_high)/nrow(vre_fixed_rd_sim)
+vre_fixed_in_ci <- sum(vre_fixed_rd_sim$SATE > vre_fixed_rd_sim$conf_int_low & vre_fixed_rd_sim$SATE < vre_fixed_rd_sim$conf_int_high)/nrow(vre_fixed_rd_sim)
 vre_fixed_in_ci
 
 ## random
 vre_random_rmse <- sqrt(mean((vre_random_rd_sim$coef - vre_random_rd_sim$SATE)^2))
-vre_random_in_ci <- sum(vre_random_rd_sim$coef > vre_random_rd_sim$conf_int_low & vre_random_rd_sim$coef < vre_random_rd_sim$conf_int_high)/nrow(vre_random_rd_sim)
+vre_random_in_ci <- sum(vre_random_rd_sim$SATE > vre_random_rd_sim$conf_int_low & vre_random_rd_sim$SATE < vre_random_rd_sim$conf_int_high)/nrow(vre_random_rd_sim)
 vre_random_in_ci
 
 ## violate ignorability assumption ####
 ## lr
 ig_lr_rmse <- sqrt(mean((ig_lr_rd_sim$coef - ig_lr_rd_sim$SATE)^2))
-ig_lr_in_ci <- sum(ig_lr_rd_sim$coef > ig_lr_rd_sim$conf_int_low & ig_lr_rd_sim$coef < ig_lr_rd_sim$conf_int_high)/nrow(ig_lr_rd_sim)
+ig_lr_in_ci <- sum(ig_lr_rd_sim$SATE > ig_lr_rd_sim$conf_int_low & ig_lr_rd_sim$SATE < ig_lr_rd_sim$conf_int_high)/nrow(ig_lr_rd_sim)
 ig_lr_in_ci
 
 ## fixed
 ig_fixed_rmse <- sqrt(mean((ig_fixed_rd_sim$coef - ig_fixed_rd_sim$SATE)^2))
-ig_fixed_in_ci <- sum(ig_fixed_rd_sim$coef > ig_fixed_rd_sim$conf_int_low & ig_fixed_rd_sim$coef < ig_fixed_rd_sim$conf_int_high)/nrow(ig_fixed_rd_sim)
+ig_fixed_in_ci <- sum(ig_fixed_rd_sim$SATE > ig_fixed_rd_sim$conf_int_low & ig_fixed_rd_sim$SATE < ig_fixed_rd_sim$conf_int_high)/nrow(ig_fixed_rd_sim)
 ig_fixed_in_ci
 
 ## random
 ig_random_rmse <- sqrt(mean((ig_random_rd_sim$coef - ig_random_rd_sim$SATE)^2))
-ig_random_in_ci <- sum(ig_random_rd_sim$coef > ig_random_rd_sim$conf_int_low & ig_random_rd_sim$coef < ig_random_rd_sim$conf_int_high)/nrow(ig_random_rd_sim)
+ig_random_in_ci <- sum(ig_random_rd_sim$SATE > ig_random_rd_sim$conf_int_low & ig_random_rd_sim$SATE < ig_random_rd_sim$conf_int_high)/nrow(ig_random_rd_sim)
 ig_random_in_ci
 
 ## group level treatment ####
 ## lr
 gl_lr_rmse <- sqrt(mean((gl_lr_rd_sim$coef - gl_lr_rd_sim$SATE)^2))
-gl_lr_in_ci <- sum(gl_lr_rd_sim$coef > gl_lr_rd_sim$conf_int_low & gl_lr_rd_sim$coef < gl_lr_rd_sim$conf_int_high)/nrow(gl_lr_rd_sim)
+gl_lr_in_ci <- sum(gl_lr_rd_sim$SATE > gl_lr_rd_sim$conf_int_low & gl_lr_rd_sim$SATE < gl_lr_rd_sim$conf_int_high)/nrow(gl_lr_rd_sim)
 gl_lr_in_ci
 
 ## treatment effect cannot be estimated with fixed effects 
 
 ## random
 gl_random_rmse <- sqrt(mean((gl_random_rd_sim$coef - gl_random_rd_sim$SATE)^2))
-gl_random_in_ci <- sum(gl_random_rd_sim$coef > gl_random_rd_sim$conf_int_low & gl_random_rd_sim$coef < gl_random_rd_sim$conf_int_high)/nrow(gl_random_rd_sim)
+gl_random_in_ci <- sum(gl_random_rd_sim$SATE > gl_random_rd_sim$conf_int_low & gl_random_rd_sim$SATE < gl_random_rd_sim$conf_int_high)/nrow(gl_random_rd_sim)
 gl_random_in_ci
 
 ## RMSE ####
