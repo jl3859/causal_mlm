@@ -8,7 +8,7 @@ library(gridExtra)
 source("dgp_script.R") 
 
 # Set iteration number for simulations
-iter <- 100
+iter <- 1000
 
 # Set seed for reproducibility
 set.seed(2020)

@@ -146,8 +146,8 @@ grid.arrange(tableGrob(rmse_rd_compare, theme=ttheme_default()), nrow = 1)
 ci_rd_compare <- data.frame("CI Comparison" = c("Linear Regression", "Fixed Effects", "Random Effects"),
                               "Base Case" = round(c(base_lr_in_ci, base_fixed_in_ci, base_random_in_ci),2),
                               "RE Violation" = round(c(vre_lr_in_ci, vre_fixed_in_ci, vre_random_in_ci),2),
-                              "Ig. Violation" = round(c(ig_lr_in_ci, ig_fixed_in_ci, ig_random_in_ci),2),
-                              "Group Treatment" = c(round(gl_lr_in_ci,4), "N/A", round(gl_random_in_ci,2)))
+                              "Ig.Violation" = round(c(ig_lr_in_ci, ig_fixed_in_ci, ig_random_in_ci),2),
+                              "Group Treatment" = c(round(gl_lr_in_ci,2), "N/A", round(gl_random_in_ci,2)))
 
 grid.arrange(tableGrob(ci_rd_compare, theme=ttheme_default()), nrow = 1)
 
